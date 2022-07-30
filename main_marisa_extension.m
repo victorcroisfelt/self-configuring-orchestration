@@ -1,9 +1,9 @@
-close all
-clear all
+%close all
+%clear all
 
-addpath('functions')
+%addpath('functions')
 
-plot_flag = false();
+%plot_flag = false();
 
 %% Physical Parameters
 c = 3*10^8;   %physconst('LightSpeed'); % speed of light
@@ -29,7 +29,7 @@ sigma2n = 10^((-94-30)/10);
 %% BS Parameters
 
 % Number of BS antennas
-M = 64;
+%M = 64;
 
 % Transmit power at the BS = 20 dBm (-26)
 P = 10^((20-30)/10);
@@ -40,7 +40,7 @@ el_dist = 0.5;
 %% HRIS Parameters
 
 % Number of RIS elements on the x-axis
-Nx = 32;
+%Nx = 32;
 
 % Number of RIS elements on the y-axis
 Ny = 1;
@@ -54,7 +54,7 @@ eta = 0.8;
 %% UE Parameters
 
 % Number of UEs
-K = 16;
+%K = 16;
 
 % Transmit power at the UE = 20 dBm (-26)
 P_ue = 10^((20-30)/10);
@@ -62,7 +62,7 @@ P_ue = 10^((20-30)/10);
 %% System Parameters
 
 % Channel estimation relative length
-L = 64;
+%L = 64;
 
 % Channel estimation length
 tau_est = L * K;
@@ -89,7 +89,7 @@ N_setup = 50;
 N_channel_realizations = 50;
 
 % Parameterized variable to define area of interest
-scenario_size = 50;
+% scenario_size = 50;
 
 %% Simulation Setup
 
