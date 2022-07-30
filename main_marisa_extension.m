@@ -166,8 +166,7 @@ for ind_setup = 1:N_setup
             D = C_vec(ind_d);
             C = D;
             
-            
-            message = ['run', num2str(ind_setup), '/',num2str(N_setup),' D',num2str(ind_d),'/',num2str(length(D_vec))];
+            message = ['run', num2str(ind_setup), '/',num2str(N_setup),' Chan',num2str(ind_ch),'/',num2str(N_channel_realizatios),' C',num2str(ind_d),'/',num2str(length(C_vec))];
             disp(message)
             
             [~,theta_in, phi_vec] = generate_codebook(C,N);
@@ -183,21 +182,25 @@ for ind_setup = 1:N_setup
             [Y_r_pow] = received_signal_RIS(Theta_prob_pow, h_los, eta, pilots, P_ue, sigma2n);
             [Y_r_sig] = received_signal_RIS(Theta_prob_sig, h_los, eta, pilots, P_ue, sigma2n);
             
-            threshold_sig = 0.0020;
-            threshold_pow = 1*10^-7;
-            [Theta_opt_sig, det_ue_sig] = MARISA_EXTENSION(Y_r_pow, theta_in, threshold_sig, phiB_0_a, sigma2n, 'signal');
-            [Theta_opt_pow, det_ue_pow] = MARISA_EXTENSION(Y_r_pow, theta_in, threshold_pow, phiB_0_a, sigma2n, 'power');
+            false_alarm_prob = 0.001;
+            [Theta_opt_sig, det_rate_sig] = MARISA_EXTENSION(Y_r_pow, theta_in, false_alarm_prob, phiB_0_a, sigma2n, 'signal');
+            [Theta_opt_pow, det_rate_pow] = MARISA_EXTENSION(Y_r_pow, theta_in, false_alarm_prob, phiB_0_a, sigma2n, 'power');
             
             % Equivalent BS-UE channel
             Theta_over_blocks = cat(3, Theta_prob_pow,Theta_prob_sig); % to change after hris optimization
             [H_circ] = equivalent_BS_UE_channel(Theta_over_blocks, h_los, G_los, h_D_los, eta);
             [Y_b]    = received_signal_BS(H_circ, pilots, P_ue, sigma2n);
             
+            % Channel estimation mse
+            [MSE_sig] = channel_estiamation_MSE(M,L,K,sigma2n,P_ue,G_los,Theta_prob_sig, Theta_opt_sig, h_los, eta);
+            [MSE_pow] = channel_estiamation_MSE(M,L,K,sigma2n,P_ue,G_los,Theta_prob_pow, Theta_opt_pow, h_los, eta);
+
             
+            detected_ue_sig(ind_d,ind_setup,ind_ch) = det_rate_sig;
+            detected_ue_pow(ind_d,ind_setup,ind_ch) = det_rate_pow;
             
-            
-            
-            
+            MSE_cha_est_sig(ind_d,ind_setup,ind_ch) = MSE_sig;
+            MSE_cha_est_pow(ind_d,ind_setup,ind_ch) = MSE_pow;
             
         end
     end
