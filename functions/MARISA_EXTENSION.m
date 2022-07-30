@@ -64,8 +64,8 @@ end
 v_U = sum(Theta_hat.*sqrt(A_hat)./max(sqrt(A_hat)),2);
 
 v_U = v_U./max(abs(v_U));
-v = v_U.*conj(v_B);
-Theta_out = diag(v);
+Theta_out = v_U.*conj(v_B);
+%Theta_out = diag(v);
 
 
 end
