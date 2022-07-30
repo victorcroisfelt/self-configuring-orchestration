@@ -56,6 +56,7 @@ if strcmpi(mode,'signal')
     
     % Obtain estimated CSI for the detected UEs in Eqs. (16) and (17) 
     Theta_hat = Comb_matrix(:, max_ind);
+    Theta_hat = Theta_hat(:, detected_ue);
     A_hat = max_pow(detected_ue);
     
     % Compute true probability of detection
@@ -104,6 +105,7 @@ if strcmpi(mode,'power')
     
     % Obtain estimated CSI for the detected UEs
     Theta_hat = theta(:, max_ind);
+    Theta_hat = Theta_hat(:, detected_ue);
     A_hat = max_pow(detected_ue);
     
     % Compute true probability of detection 
