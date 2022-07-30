@@ -121,12 +121,12 @@ for run_ind = 1:N_run
         
        
         
-        [~,C_in, phi_vec] = generate_codebook(C,N);
+        [~,theta_prob_pow, phi_vec] = generate_codebook(C,N);
         % Probing codebook definition
         Theta_prob_sig = repmat(eye(N), [1,1,C]);
         Theta_prob_pow = zeros(N,N,C);
         for t = 1:C
-            Theta_prob_pow(:,:,t) = diag(C_in(:,t));
+            Theta_prob_pow(:,:,t) = diag(theta_prob_pow(:,t));
         end
         
         % received signal at  ris
@@ -134,9 +134,10 @@ for run_ind = 1:N_run
         [Y_r_sig] = received_signal_RIS(Theta_prob_sig, h_0_los, eta, pilots, P_ue, sigma2n);
         
         threshold = 1*10^-7;
-        [Theta_opt_sig] = MARISA_EXTENSION(Y_r_pow, Theta_prob_pow, threshold, phiB_0_a, sigma2n, 'signal');
-        [Theta_opt_pow] = MARISA_EXTENSION(Y_r_pow, Theta_prob_pow, threshold, phiB_0_a, sigma2n, 'power');
-        
+        for repeat = 1:5000
+        [Theta_opt_sig] = MARISA_EXTENSION(Y_r_pow, theta_prob_pow, threshold, phiB_0_a, sigma2n, 'signal');
+        [Theta_opt_pow] = MARISA_EXTENSION(Y_r_pow, theta_prob_pow, threshold, phiB_0_a, sigma2n, 'power');
+        end
         % equivalent BS-ue channel
         Theta_over_blocks = cat(3, Theta_prob_pow,Theta_prob_sig); % to change after hris optimization
         [H_circ] = equivalent_BS_UE_channel(Theta_over_blocks, h_0_los, G_0_los, h_D_los, eta);
@@ -168,7 +169,7 @@ for run_ind = 1:N_run
         gain_ue_0_los = d_u_0.^-beta;
         gain_bs_los = d_0_G.^-beta;
         
-        [~,C_in, phi_vec] = generate_codebook(M_cod,N);
+        [~,theta_prob_pow, phi_vec] = generate_codebook(M_cod,N);
                 
         % ESTIMATION MARISA
         h_in = cat(1,h_0_los);
@@ -184,7 +185,7 @@ for run_ind = 1:N_run
         H_MISO_eq = zeros(K, M, M_cod);
         H_MISO_eq_pow = zeros(K, M_cod);
         for c_ind = 1:M_cod
-            Phim = diag(C_in(:,c_ind));
+            Phim = diag(theta_prob_pow(:,c_ind));
             H_MISO_eq(:,:,c_ind) = (h_in'*Phim*G + hd');
             for u = 1:K
                 H_MISO_eq_pow(u,c_ind) = norm(H_MISO_eq(u,:,c_ind)');
