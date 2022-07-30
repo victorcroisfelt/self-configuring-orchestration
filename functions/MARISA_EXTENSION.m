@@ -109,7 +109,11 @@ if strcmpi(mode,'power')
     A_hat = max_pow(detected_ue);
     
     % Compute true probability of detection 
-    true_prob_detection = exp(- (1/2) * N * sigma2n * (threshold - max_pow));
+    true_prob_detection = exp(-(2 * N * sigma2n)^(-1) * (threshold - max_pow));
+
+    pos = (threshold - max_pow < 0);
+    true_prob_detection(pos) = 0;
+
     true_prob_detection(isinf(true_prob_detection)|isnan(true_prob_detection)) = 1;
 
     true_prob_detection = mean(true_prob_detection);

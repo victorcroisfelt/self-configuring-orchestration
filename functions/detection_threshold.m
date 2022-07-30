@@ -31,6 +31,6 @@ end
 
 if strcmpi(mode,'power')
 
-    threshold = - (2 / (num_elements * noise_power)) * log(prob_false_alarm);
+    threshold = - (2 * num_elements * noise_power) * log(prob_false_alarm);
 
 end
