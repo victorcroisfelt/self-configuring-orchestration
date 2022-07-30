@@ -34,13 +34,13 @@ if strcmpi(mode,'signal')
     % Normalizing
     Comb_matrix = (1/N).*Comb_matrix;
     
-    %Y_comb = zeros(D,K,C);
-    %for c = 1:C
-    %    Y_comb(:,:,c) = Comb_matrix'*Y(:,:,c);
-    %end
+    Y_comb = zeros(D,K,C);
+    for c = 1:C
+        Y_comb(:,:,c) = Comb_matrix'*Y(:,:,c);
+    end
 
     % Compute received signal according to Eq. (9)
-    Y_comb = reshape(Comb_matrix'*reshape(Y,[N, K*C]), [D, K, C]);
+    %Y_comb = reshape(Comb_matrix'*reshape(Y,[N, K*C]), [D, K, C]);
     
     % Compute average received signal according to Eq. (13)
     Y_bar = (1/C).*sum(Y_comb, 3);
@@ -49,17 +49,17 @@ if strcmpi(mode,'signal')
     Y_bar_pow = abs(Y_bar).^2;
     
     % Obtain the power received at the best direction according to Eq. (15)
-    max_pow = max(Y_bar_pow, [], 1);
-
-    % Compute true probability of detection 
-    
+    [max_pow, max_ind] = max(Y_bar_pow, [], 1);
 
     % Apply detection test in Eq. (22)
     detected_ue = max_pow > (2*N*C/sigma2n)^-1 * threshold;
     
     % Obtain estimated CSI for the detected UEs in Eqs. (16) and (17) 
-    Theta_hat = Comb_matrix(:, detected_ue);
+    Theta_hat = Comb_matrix(:, max_ind);
     A_hat = max_pow(detected_ue);
+    
+    % Compute true probability of detection 
+    true_prob_detection = 0;
     
 end
 
@@ -88,14 +88,17 @@ if strcmpi(mode,'power')
     Y_bar_pow = abs(Y_bar).^2;
     
     % Obtain the power received at the best direction
-    max_pow = max(Y_bar_pow, [], 1);
+    [max_pow, max_ind] = max(Y_bar_pow, [], 1);
     
     % Apply detection test in Eq. (30)
     detected_ue = max_pow > threshold;
     
     % Obtain estimated CSI for the detected UEs
-    Theta_hat = theta(:, detected_ue);
+    Theta_hat = theta(:, max_ind);
     A_hat = max_pow(detected_ue);
+    
+    % Compute true probability of detection 
+    true_prob_detection = 0;
 
 end
 
