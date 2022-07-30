@@ -23,16 +23,16 @@ hheight_A = 6;  % [m] height of NR
 beta = 2; % LoS                          
 beta_nlos = 4; % NLoS
 
-% Noise power
-sigma2n = 10^((-80-30)/10);         
+% Noise power (-80)
+sigma2n = 10^((-94-30)/10);         
 
 %% BS Parameters
 
 % Number of BS antennas
 M = 64;                             
 
-% Transmit power at the BS = 26 dBm
-P = 10^((26-30)/10);   
+% Transmit power at the BS = 20 dBm (-26)
+P = 10^((20-30)/10);   
 
 % RIS/BSantenna elements interdistance normalized wrt lambda
 el_dist = 0.5;                      
@@ -59,8 +59,8 @@ eta = 0.8;
 % Number of UEs
 K_vec = [16]'; 
 
-% Transmit power at the UE = 26 dBm
-P_ue = 10^((26-30)/10);             
+% Transmit power at the UE = 20 dBm (-26)
+P_ue = 10^((20-30)/10);             
 
 %% System Parameters
 
@@ -135,15 +135,15 @@ for ind_scen = 1:length(extr_scenario_vec)
                 ue = ue_s(:,1:K,run_ind);
                 
                 
-                %% Compute geometry wrt BS
+                % Compute geometry wrt BS
                 rot_angle = 90/180*pi;
                 [bs_rot, ue_rot, ~] = rotate_geometry(rot_angle, bs, ue, ris_0_el, false());
                 
-                %% Compute UE angles wrt BS and RIS
+                % Compute UE angles wrt BS and RIS
                 phiUB = atan2(ue_rot(2,:)-bs_rot(2),ue_rot(1,:)-bs_rot(1))';
                 phiU_0 = atan2(ue(2,:)-ris_0(2),ue(1,:)-ris_0(1))';
                 
-                %% Compute UE distances wrt BS and RIS
+                % Compute UE distances wrt BS and RIS
                 d_Bu = zeros(K,1);
                 d_u_0 = zeros(K,1);
         
@@ -153,8 +153,8 @@ for ind_scen = 1:length(extr_scenario_vec)
                 end
                 
                 %% compute blockage probability of paths
-                [block_u_0]  = blockage_path(d_u_0, lambda_b, radius_B, height_B, height_U, hheight_A); % ris block
-                [block_Bu]   = blockage_path(d_Bu, lambda_b, radius_B, height_B, height_U, hheight_A);    % bs  block
+                [block_u_0] = blockage_path(d_u_0, lambda_b, radius_B, height_B, height_U, hheight_A); % ris block
+                [block_Bu] = blockage_path(d_Bu, lambda_b, radius_B, height_B, height_U, hheight_A);    % bs  block
                 
                 %block_u_0(:) = 0;       % remove blockages, to have channels all in LoS
                 %block_Bu(:) = 0;
