@@ -48,9 +48,6 @@ Ny = 1;
 % Number of RIS elements
 N = Nx * Ny;
 
-% Number codebook elements
-M_cod = 64;
-
 % HRIS absorption parameter
 eta = 0.8;
 
@@ -91,14 +88,10 @@ tau_ref = tau_c - tau_pro;
 N_setup = 50;
 N_channel_realizations = 50;
 
-% Don't know what is that
-I = 1;  % risma iterations
-Q_bit = 1;
-
-%% Simulation Setup
-
 % Parameterized variable to define area of interest
 scenario_size = 50;
+
+%% Simulation Setup
 
 % Limits of the area of the interest
 x_lim = [0, scenario_size];
@@ -119,12 +112,18 @@ d_0_G = norm(bs-ris_0);                          % Distance BS-RIS
 % pilots
 pilots = diag(ones(K, 1));
 
-%% Results
-detected_ue_sig = zeros(numel(C_vec), N_setup, N_channel_realizations);
-detected_ue_pow = zeros(numel(C_vec), N_setup, N_channel_realizations);
+% false_alarm
+false_alarm_prob_vec = [0,0,0,0];
 
-MSE_cha_est_sig = zeros(numel(C_vec), N_setup, N_channel_realizations);
-MSE_cha_est_pow = zeros(numel(C_vec), N_setup, N_channel_realizations);
+%% Results
+hat_detected_ue_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_setup, N_channel_realizations);
+hat_detected_ue_pow = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_setup, N_channel_realizations);
+
+th_detected_ue_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_setup, N_channel_realizations);
+th_detected_ue_pow = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_setup, N_channel_realizations);
+
+MSE_cha_est_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_setup, N_channel_realizations);
+MSE_cha_est_pow = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_setup, N_channel_realizations);
 
 %% Simulation
 
@@ -195,29 +194,38 @@ for ind_setup = 1:N_setup
             [Y_r_sig] = received_signal_RIS(Theta_prob_sig, h_los, eta, pilots, P_ue, sigma2n);
             
             false_alarm_prob = 0.001;
-            [Theta_opt_sig, det_rate_sig] = MARISA_EXTENSION(Y_r_pow, theta_in, false_alarm_prob, phiB_0_a, sigma2n, 'signal');
-            [Theta_opt_pow, det_rate_pow] = MARISA_EXTENSION(Y_r_pow, theta_in, false_alarm_prob, phiB_0_a, sigma2n, 'power');
-            
-            % Equivalent BS-UE channel
-            Theta_over_blocks = cat(3, Theta_prob_pow, Theta_prob_sig); % to change after hris optimization
-            [H_circ] = equivalent_BS_UE_channel(Theta_over_blocks, h_los, G_los, h_D_los, eta);
-            [Y_b]    = received_signal_BS(H_circ, pilots, P_ue, sigma2n);
-            
-            % Channel estimation mse
-            [MSE_sig] = channel_estiamation_MSE(M,L,K,sigma2n,P_ue,G_los,Theta_prob_sig, Theta_opt_sig, h_los, eta);
-            [MSE_pow] = channel_estiamation_MSE(M,L,K,sigma2n,P_ue,G_los,Theta_prob_pow, Theta_opt_pow, h_los, eta);
+            for ind_prob = 1:numel(false_alarm_prob_vec)
+                false_alarm_prob = 0.001;
 
-   
-            % Save simulation results
-            detected_ue_sig(ind_d,ind_setup,ind_ch) = det_rate_sig;
-            detected_ue_pow(ind_d,ind_setup,ind_ch) = det_rate_pow;
-            
-            MSE_cha_est_sig(ind_d,ind_setup,ind_ch) = MSE_sig;
-            MSE_cha_est_pow(ind_d,ind_setup,ind_ch) = MSE_pow;
-            
+                [Theta_opt_sig, hat_det_rate_sig, th_det_rate_sig] = MARISA_EXTENSION(Y_r_pow, theta_in, false_alarm_prob, phiB_0_a, sigma2n, 'signal');
+                [Theta_opt_pow, hat_det_rate_pow, th_det_rate_pow] = MARISA_EXTENSION(Y_r_pow, theta_in, false_alarm_prob, phiB_0_a, sigma2n, 'power');
+
+                % Equivalent BS-UE channel
+                Theta_over_blocks = cat(3, Theta_prob_pow, Theta_prob_sig); % to change after hris optimization
+                [H_circ] = equivalent_BS_UE_channel(Theta_over_blocks, h_los, G_los, h_D_los, eta);
+                [Y_b]    = received_signal_BS(H_circ, pilots, P_ue, sigma2n);
+
+                % Channel estimation mse
+                [MSE_sig] = channel_estiamation_MSE(M,L,K,sigma2n,P_ue,G_los,Theta_prob_sig, Theta_opt_sig, h_los, eta);
+                [MSE_pow] = channel_estiamation_MSE(M,L,K,sigma2n,P_ue,G_los,Theta_prob_pow, Theta_opt_pow, h_los, eta);
+
+
+                % Save simulation results
+                hat_detected_ue_sig(ind_d,ind_prob,ind_setup,ind_ch) = hat_det_rate_sig;
+                hat_detected_ue_pow(ind_d,ind_prob,ind_setup,ind_ch) = hat_det_rate_pow;
+                
+                th_detected_ue_sig(ind_d,ind_prob,ind_setup,ind_ch) = th_det_rate_sig;
+                th_detected_ue_pow(ind_d,ind_prob,ind_setup,ind_ch) = th_det_rate_pow;
+
+                MSE_cha_est_sig(ind_d,ind_prob,ind_setup,ind_ch) = MSE_sig;
+                MSE_cha_est_pow(ind_d,ind_prob,ind_setup,ind_ch) = MSE_pow;
+            end
         end
     end
 end
 
+
+%% Save results
+save(['RESULTS','_M', num2str(M),'_N', num2str(N),'_K', num2str(K),'_L', num2str(L),'_',num2str(scenario_size),'x',num2str(scenario_size)])
 
 
