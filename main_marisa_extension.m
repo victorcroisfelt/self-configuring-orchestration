@@ -57,7 +57,7 @@ eta = 0.8;
 %% UE Parameters
 
 % Number of UEs
-K_vec = [16]'; 
+K_vec = 16;
 
 % Transmit power at the UE = 20 dBm (-26)
 P_ue = 10^((20-30)/10);             
@@ -79,7 +79,7 @@ tau_com = tau_est;
 %% Simulation parameters
 
 % Range of probing relative lenght
-C_vec = 2.^(1:6);
+C_vec = 2.^(1:6);     % iterate
 
 % Range of probing length
 tau_pro = C_vec * K_vec;
@@ -88,14 +88,14 @@ tau_pro = C_vec * K_vec;
 tau_ref = tau_c - tau_pro;
 
 % Number of setups (simulation runs)
-N_run = 1;                         
+N_setup = 50;
+N_channel_realizatios = 50;
 
 % Don't know what is that
 I = 1;  % risma iterations
 Q_bit = 1;
 
 %% Simulation
-
 extr_scenario_vec = 50;
 
 for ind_scen = 1:length(extr_scenario_vec)
@@ -116,10 +116,15 @@ for ind_scen = 1:length(extr_scenario_vec)
     
     
     rng(49)
-    ue_s = [(x_lim(2)-x_lim(1))*rand(1,max(K_vec),N_run)+x_lim(1); (y_lim(2)-y_lim(1))*rand(1,max(K_vec),N_run)+y_lim(1)];
-    random_phase = exp(1i.*rand(max(K_vec),N_run).*2*pi);
+    for run_ind = 1:N_setup
     
-    for run_ind = 1:N_run
+    ue_s = [(x_lim(2)-x_lim(1))*rand(1,max(K_vec),N_setup)+x_lim(1); (y_lim(2)-y_lim(1))*rand(1,max(K_vec),N_setup)+y_lim(1)];
+    
+    %channel realization for 
+    
+    random_phase = exp(1i.*rand(max(K_vec),N_setup).*2*pi);
+    
+
 
         for ind_k = 1:length(K_vec)
 
@@ -127,7 +132,7 @@ for ind_scen = 1:length(extr_scenario_vec)
 
                 D = C_vec(ind_d);
                     
-                message = ['run', num2str(run_ind), '/',num2str(N_run),' n_ue',num2str(ind_k),'/',num2str(length(K_vec)),' scenario',num2str(ind_scen),'/',num2str(length(extr_scenario_vec)),' D',num2str(ind_d),'/',num2str(length(D_vec))];
+                message = ['run', num2str(run_ind), '/',num2str(N_setup),' n_ue',num2str(ind_k),'/',num2str(length(K_vec)),' scenario',num2str(ind_scen),'/',num2str(length(extr_scenario_vec)),' D',num2str(ind_d),'/',num2str(length(D_vec))];
                 disp(message)
                 K = K_vec(ind_k);
                 
@@ -168,16 +173,14 @@ for ind_scen = 1:length(extr_scenario_vec)
                 
                 %% frame
                 C = D;
-                
-               
-                
-                [~,C_in, phi_vec] = generate_codebook(C,N);
+
+                [~,theta_in, phi_vec] = generate_codebook(C,N);
                 
                 % Probing codebook definition
                 Theta_prob_sig = repmat(eye(N), [1,1,C]);
                 Theta_prob_pow = zeros(N,N,C);
                 for t = 1:C
-                    Theta_prob_pow(:,:,t) = diag(C_in(:,t));
+                    Theta_prob_pow(:,:,t) = diag(theta_in(:,t));
                 end
                 
                 % Received signal at RIS
@@ -185,71 +188,17 @@ for ind_scen = 1:length(extr_scenario_vec)
                 [Y_r_sig] = received_signal_RIS(Theta_prob_sig, h_0_los, eta, pilots, P_ue, sigma2n);
                 
                 threshold = 1*10^-7;
-                [Theta_opt_sig] = MARISA_EXTENSION(Y_r_pow, Theta_prob_pow, threshold, phiB_0_a, sigma2n, 'signal');
-                [Theta_opt_pow] = MARISA_EXTENSION(Y_r_pow, Theta_prob_pow, threshold, phiB_0_a, sigma2n, 'power');
+                [Theta_opt_sig] = MARISA_EXTENSION(Y_r_pow, theta_in, threshold, phiB_0_a, sigma2n, 'signal');
+                [Theta_opt_pow] = MARISA_EXTENSION(Y_r_pow, theta_in, threshold, phiB_0_a, sigma2n, 'power');
                 
                 % Equivalent BS-UE channel
                 Theta_over_blocks = cat(3, Theta_prob_pow,Theta_prob_sig); % to change after hris optimization
                 [H_circ] = equivalent_BS_UE_channel(Theta_over_blocks, h_0_los, G_0_los, h_D_los, eta);
                 [Y_b]    = received_signal_BS(H_circ, pilots, P_ue, sigma2n);
                 
-                
-                %{
-                theta_over_blocks = zeros(N,2*C);
-                for c = 1:2*C
-                    theta_over_blocks(:, c) = diag(Theta_over_blocks(:,:,c));
-                end
-                my_polarplot_v(theta_over_blocks)
-                
-                for c = 1:2*C
-                     my_polarplot_v(H_circ(:,:,c));
-                end
-                
-                %}
-                
-                
-                %% from here is old code
-                
-                
-                
-                
-                
-                %% ORACLE MARISA estimation with LoS channels
-                gain_ue_0_los = d_u_0.^-beta;
-                gain_bs_los = d_0_G.^-beta;
-                
-                [~,C_in, phi_vec] = generate_codebook(M_cod,N);
-                        
-                % ESTIMATION MARISA
-                h_in = cat(1,h_0_los);
-                G = cat(1,G_0_los);
-                
-                % Equivalent Channel        
-                hd = h_D_los;
-                Hb_marisa = zeros(N+1,M,K);
-                for k=1:K
-                    Hb_marisa(:,:,k) = [sqrt(eta).*diag(h_in(:,k)')*G(:,:); hd(:,k)';];
-                end
-        
-                H_MISO_eq = zeros(K, M, M_cod);
-                H_MISO_eq_pow = zeros(K, M_cod);
-                for c_ind = 1:M_cod
-                    Phim = diag(C_in(:,c_ind));
-                    H_MISO_eq(:,:,c_ind) = (h_in'*Phim*G + hd');
-                    for u = 1:K
-                        H_MISO_eq_pow(u,c_ind) = norm(H_MISO_eq(u,:,c_ind)');
-                    end 
-                end
             end
         end
     end
 end
 
-figure
-plot(phi_vec/pi*180, H_MISO_eq_pow')
-legend('1', '2', '3', '4', '5')
-xlabel('RIS beamformer direction $^{\circ}$','Interpreter', 'latex')
-ylabel('$\|\mathbf{G}^{*} \mathbf{\Phi}^{*} \mathbf{h}  + \mathbf{h}_{d} \|_{F}$','Interpreter', 'latex')
-
-plot_geometry(ris_0_el,ue,bs, true());
 
