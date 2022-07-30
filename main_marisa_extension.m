@@ -113,7 +113,7 @@ d_0_G = norm(bs-ris_0);                          % Distance BS-RIS
 pilots = diag(ones(K, 1));
 
 % false_alarm
-false_alarm_prob_vec = [0,0,0,0];
+false_alarm_prob_vec = [0.001, 0.01, 0.1];
 
 %% Results
 hat_detected_ue_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_setup, N_channel_realizations);
@@ -195,7 +195,7 @@ for ind_setup = 1:N_setup
             
             false_alarm_prob = 0.001;
             for ind_prob = 1:numel(false_alarm_prob_vec)
-                false_alarm_prob = 0.001;
+                false_alarm_prob = false_alarm_prob_vec(ind_prob);
 
                 [Theta_opt_sig, hat_det_rate_sig, th_det_rate_sig] = MARISA_EXTENSION(Y_r_pow, theta_in, false_alarm_prob, phiB_0_a, sigma2n, 'signal');
                 [Theta_opt_pow, hat_det_rate_pow, th_det_rate_pow] = MARISA_EXTENSION(Y_r_pow, theta_in, false_alarm_prob, phiB_0_a, sigma2n, 'power');
