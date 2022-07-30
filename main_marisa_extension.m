@@ -89,7 +89,7 @@ N_setup = 50;
 N_channel_realizations = 50;
 
 % Parameterized variable to define area of interest
-scenario_size = 50;
+scenario_size = 100;
 
 %% Simulation Setup
 
