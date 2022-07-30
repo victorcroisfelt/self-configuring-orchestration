@@ -1,4 +1,4 @@
-function [Theta_out, detected_ue, hat_prob_detection] = MARISA_EXTENSION(Y, Codebook, prob_false_alarm, phi_B, sigma2n, mode)
+function [Theta_out, hat_prob_detection, true_prob_detection] = MARISA_EXTENSION(Y, Codebook, prob_false_alarm, phi_B, sigma2n, mode)
 
 % Extract sizes 
 N = size(Y,1); % number of RIS elements
@@ -50,6 +50,9 @@ if strcmpi(mode,'signal')
     
     % Obtain the power received at the best direction according to Eq. (15)
     max_pow = max(Y_bar_pow, [], 1);
+
+    % Compute true probability of detection 
+    
 
     % Apply detection test in Eq. (22)
     detected_ue = max_pow > (2*N*C/sigma2n)^-1 * threshold;
