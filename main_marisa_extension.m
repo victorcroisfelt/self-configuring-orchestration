@@ -79,10 +79,10 @@ tau_com = tau_est;
 %% Simulation parameters
 
 % Range of probing relative lenght
-C = 2.^(1:6);
+C_vec = 2.^(1:6);
 
 % Range of probing length
-tau_pro = C * K_vec;
+tau_pro = C_vec * K_vec;
 
 % Range of reflection length
 tau_ref = tau_c - tau_pro;
@@ -123,9 +123,9 @@ for ind_scen = 1:length(extr_scenario_vec)
 
         for ind_k = 1:length(K_vec)
 
-            for ind_d = 1:length(D_vec)
+            for ind_d = 1:length(C_vec)
 
-                D = D_vec(ind_d);
+                D = C_vec(ind_d);
                     
                 message = ['run', num2str(run_ind), '/',num2str(N_run),' n_ue',num2str(ind_k),'/',num2str(length(K_vec)),' scenario',num2str(ind_scen),'/',num2str(length(extr_scenario_vec)),' D',num2str(ind_d),'/',num2str(length(D_vec))];
                 disp(message)
