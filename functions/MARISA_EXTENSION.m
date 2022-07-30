@@ -117,7 +117,7 @@ if strcmpi(mode,'power')
 end
 
 % Compute estimated probability of detection
-hat_prob_detection = length(detected_ue) / K;
+hat_prob_detection = sum(detected_ue) / K;
 
 % Compute normalized directions according to Eqs. (32) and (33)
 v_U = sum(Theta_hat.*sqrt(A_hat)./max(sqrt(A_hat)), 2);
