@@ -61,7 +61,6 @@ if strcmpi(mode,'power')
     for d = 1:D
         Y_d(d,:) = theta(:,d)'*Y(:,:,d);
     end
-    Y_d_2 = reshape(theta'*reshape(Y,[N,K*C]),[D,K]);
     
     
     Y_bar = Y_d;
