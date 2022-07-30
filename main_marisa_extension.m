@@ -96,7 +96,6 @@ Q_bit = 1;
 
 %% Simulation
 
-
 extr_scenario_vec = 50;
 
 for ind_scen = 1:length(extr_scenario_vec)
