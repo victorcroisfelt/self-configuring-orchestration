@@ -40,34 +40,34 @@ end
 SINR = S./(I+N);
 SE = (tau_c-tau_est)./tau_c.*log2(1+SINR);
 
-V_bound = zeros(K,K);
-E_bound = zeros(K,K);
-for k =1:K
-    for  i = 1:K
-        V_bound(k,i) =  sum((abs(H_bar_hat(:,k)).^2+ 1./(L*K*K)*sigma2n/P_ue).*abs(H_circ(:,i)).^2);
-        for m =1:M
-            for m_prime = 1:M
-                if m_prime ~= m
-                    E_bound(k,i) = E_bound(k,i) + H_bar(m,k).*conj(H_bar(m_prime,k)).* conj(H_circ_star(m,i)).*H_circ(m_prime,k);
-                end
-            end
-        end
-    end
-end
+% V_bound = zeros(K,K);
+% E_bound = zeros(K,K);
+% for k =1:K
+%     for  i = 1:K
+%         V_bound(k,i) =  sum((abs(H_bar_hat(:,k)).^2+ 1./(L*K*K)*sigma2n/P_ue).*abs(H_circ(:,i)).^2);
+%         for m =1:M
+%             for m_prime = 1:M
+%                 if m_prime ~= m
+%                     E_bound(k,i) = E_bound(k,i) + H_bar(m,k).*conj(H_bar(m_prime,k)).* conj(H_circ_star(m,i)).*H_circ(m_prime,k);
+%                 end
+%             end
+%         end
+%     end
+% end
+% 
+% E_bound = real(E_bound);
+% 
+% S_bound = zeros(K,1);
+% I_bound = zeros(K,1);
+% N_bound = zeros(K,1);
+% for k =1:K
+%     S_bound(k) = P_ue*abs(H_bar_hat(:,k)'*H_circ_star(:,k)).^2;
+%     I_bound(k) = P_ue*sum(V_bound(k,:)+E_bound(k,:))-S_bound(k);
+%     N_bound(k) = sigma2n*(abs(H_bar(:,k)'*H_bar(:,k)) + M/(L*K*K).*(sigma2n/P_ue));
+% end
 
-E_bound = real(E_bound);
-
-S_bound = zeros(K,1);
-I_bound = zeros(K,1);
-N_bound = zeros(K,1);
-for k =1:K
-    S_bound(k) = P_ue*abs(H_bar_hat(:,k)'*H_circ_star(:,k)).^2;
-    I_bound(k) = P_ue*sum(V_bound(k,:)+E_bound(k,:))-S_bound(k);
-    N_bound(k) = sigma2n*(abs(H_bar(:,k)'*H_bar(:,k)) + M/(L*K*K).*(sigma2n/P_ue));
-end
-
-SINR_bound = S_bound./(I_bound+N_bound);
-SE_bound = (tau_c-tau_est)./tau_c.*log2(1+SINR_bound);
+SINR_bound = 0:%S_bound./(I_bound+N_bound);
+SE_bound = 0;%(tau_c-tau_est)./tau_c.*log2(1+SINR_bound);
 
 
 end
