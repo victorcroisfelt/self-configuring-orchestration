@@ -125,6 +125,12 @@ th_detected_ue_pow = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_setup, N
 MSE_cha_est_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_setup, N_channel_realizations);
 MSE_cha_est_pow = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_setup, N_channel_realizations);
 
+SINR_est_sig = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_setup, N_channel_realizations);
+SE_est_sig = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_setup, N_channel_realizations);
+
+SINR_est_pow = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_setup, N_channel_realizations);
+SE_est_pow = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_setup, N_channel_realizations);
+
 %% Simulation
 
 rng(49)
@@ -166,10 +172,6 @@ for ind_setup = 1:N_setup
         
         % Channels
         [a_R_los, ~, G_los, h_los, h_D_los, a_BSU_los, a_BSR_los] = compute_channels(d_0_G, d_u_0, d_Bu, [beta,beta_nlos], N, M, phiB_0_a, phiB_0_d, phiU_0, phiUB,el_dist, block_u_0, block_Bu);
-        
-        % Channel realizations
-        %h_los = h_los .* exp(1i.*rand(1, K).*2*pi);
-        %h_D_los = h_D_los .* exp(1i.*rand(1, K).*2*pi);
        
         for ind_d = 1:length(C_vec)
 
@@ -203,9 +205,9 @@ for ind_setup = 1:N_setup
                 [Theta_opt_pow, hat_det_rate_pow, th_det_rate_pow] = MARISA_EXTENSION(Y_r_pow, theta_in, false_alarm_prob, phiB_0_a, sigma2n, 'power');
 
                 % Equivalent BS-UE channel
-                Theta_over_blocks = cat(3, Theta_prob_pow, Theta_prob_sig); % to change after hris optimization
-                [H_circ] = equivalent_BS_UE_channel(Theta_over_blocks, h_los, G_los, h_D_los, eta);
-                [Y_b]    = received_signal_BS(H_circ, pilots, P_ue, sigma2n);
+                Theta_over_blocks_pow = cat(3, Theta_prob_pow, repmat(Theta_opt_pow,[1,1,L-C])); % to change after hris optimization
+                [SINR_pow, SE_pow]   = channel_estiamation_MMIMO(Theta_prob_pow, Theta_opt_pow, M, C, L, K, tau_est, tau_c, sigma2n,P_ue, G_los, h_los, h_D_los, eta);
+                [SINR_sig, SE_sig]   = channel_estiamation_MMIMO(Theta_prob_sig, Theta_opt_sig, M, C, L, K, tau_est, tau_c, sigma2n,P_ue, G_los, h_los, h_D_los, eta);
 
                 % Channel estimation mse
                 [MSE_sig] = channel_estiamation_MSE(M,L,K,sigma2n,P_ue,G_los,Theta_prob_sig, Theta_opt_sig, h_los, eta);
@@ -221,6 +223,12 @@ for ind_setup = 1:N_setup
 
                 MSE_cha_est_sig(ind_d,ind_prob,ind_setup,ind_ch) = MSE_sig;
                 MSE_cha_est_pow(ind_d,ind_prob,ind_setup,ind_ch) = MSE_pow;
+                
+                SINR_est_sig(:,ind_d,ind_prob,ind_setup,ind_ch) = SINR_sig;
+                SINR_est_pow(:,ind_d,ind_prob,ind_setup,ind_ch) = SINR_pow;
+                
+                SE_est_sig(:,ind_d,ind_prob,ind_setup,ind_ch) = SE_sig;
+                SE_est_pow(:,ind_d,ind_prob,ind_setup,ind_ch) = SE_pow;
 
             end
         end

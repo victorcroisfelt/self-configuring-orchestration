@@ -127,6 +127,7 @@ MSE_cha_est_pow = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_setup, N_ch
 
 SINR_est_sig = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_setup, N_channel_realizations);
 SE_est_sig = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_setup, N_channel_realizations);
+
 SINR_est_pow = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_setup, N_channel_realizations);
 SE_est_pow = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_setup, N_channel_realizations);
 
