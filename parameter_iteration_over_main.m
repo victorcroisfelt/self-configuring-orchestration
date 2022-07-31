@@ -9,7 +9,7 @@ M_vec = [32, 64];
 N_vec = [16, 32];
 K_vec = [8, 16];
 L_vec = [16, 32];
-scenario_size_vec = [50,100];
+scenario_size_vec = [250, 500];
 
 for M = M_vec
     for Nx = N_vec

@@ -194,8 +194,6 @@ for ind_setup = 1:N_setup
             % Received signal at RIS
             [Y_r_pow] = received_signal_RIS(Theta_prob_pow, h_los, eta, pilots, P_ue, sigma2n);
             [Y_r_sig] = received_signal_RIS(Theta_prob_sig, h_los, eta, pilots, P_ue, sigma2n);
-            
-            false_alarm_prob_vec = [0.1, 0.01, 0.001];
 
             for ind_prob = 1:numel(false_alarm_prob_vec)
    

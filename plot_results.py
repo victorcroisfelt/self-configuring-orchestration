@@ -12,7 +12,7 @@ rc('font', **{'family': 'sans serif', 'serif': ['Computer Modern']})
 ########################################
 # Load data
 ########################################
-mat = scipy.io.loadmat('data/RESULTS_M64_N32_K16_L64_50x50.mat')
+mat = scipy.io.loadmat('data/RESULTS_M64_N32_K16_L64_250x250.mat')
 
 # Loading parameters 
 L = np.squeeze(mat['L'])
@@ -49,16 +49,52 @@ linestyles = ['-', '--', '-.']
 # Go through all false alarm probabilities
 for fa, false_alarm_prob in enumerate(false_alarm_prob_vec):
 
+ 
+	dumb = ax.plot(C_vec/L, hat_detected_ue_pow[:, fa, :].mean(axis=-1), linewidth=1.5, linestyle=linestyles[fa], color='black', label=r'$P_{\rm FA}=' + str(false_alarm_prob) + '$')
+
+	ax.plot(C_vec/L, hat_detected_ue_pow[:, fa, :].mean(axis=-1), linewidth=1.5, linestyle=linestyles[fa], color='tab:blue')
+	ax.plot(C_vec/L, hat_detected_ue_sig[:, fa, :].mean(axis=-1), linewidth=1.5, linestyle=linestyles[fa], color='tab:orange')
+
+	#ax.fill_between(C_vec/L, np.min(mse_cha_est_pow[:, fa, :], axis=-1), np.max(mse_cha_est_pow[:, fa, :], axis=-1), linewidth=0.0, alpha=0.5, color='tab:blue')
+	#ax.fill_between(C_vec/L, np.min(mse_cha_est_sig[:, fa, :], axis=-1), np.max(mse_cha_est_sig[:, fa, :], axis=-1), linewidth=0.0, alpha=0.5, color='tab:orange')
+
+ax.set_xlabel(r'Relative duration $(C/L)$')
+ax.set_ylabel(r'Probability of detection $P_{\rm D}$')
+
+ax.legend()
+
+ax.grid(color='#E9E9E9', linestyle='--', linewidth=0.5)
+
+dumb.pop().remove()
+
+plt.show()
+
+
+fig, ax = plt.subplots()
+
+linestyles = ['-', '--', '-.']
+
+# Go through all false alarm probabilities
+for fa, false_alarm_prob in enumerate(false_alarm_prob_vec):
+
+	dumb = ax.plot(C_vec/L, hat_detected_ue_pow[:, fa, :].mean(axis=-1), linewidth=1.5, linestyle=linestyles[fa], color='black', label=r'$P_{\rm FA}=' + str(false_alarm_prob) + '$')
+
 	ax.plot(C_vec/L, mse_cha_est_pow[:, fa, :].mean(axis=-1), linewidth=1.5, linestyle=linestyles[fa], color='tab:blue')
 	ax.plot(C_vec/L, mse_cha_est_sig[:, fa, :].mean(axis=-1), linewidth=1.5, linestyle=linestyles[fa], color='tab:orange')
 
 	#ax.fill_between(C_vec/L, np.min(mse_cha_est_pow[:, fa, :], axis=-1), np.max(mse_cha_est_pow[:, fa, :], axis=-1), linewidth=0.0, alpha=0.5, color='tab:blue')
 	#ax.fill_between(C_vec/L, np.min(mse_cha_est_sig[:, fa, :], axis=-1), np.max(mse_cha_est_sig[:, fa, :], axis=-1), linewidth=0.0, alpha=0.5, color='tab:orange')
 
-ax.set_xlabel('Relative duration')
+ax.set_xlabel(r'Relative duration $(C/L)$')
 ax.set_ylabel('MSE')
 
 ax.set_yscale('log')
+
+ax.legend()
+
+ax.grid(color='#E9E9E9', linestyle='--', linewidth=0.5)
+
+dumb.pop().remove()
 
 plt.show()
 
