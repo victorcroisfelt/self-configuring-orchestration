@@ -9,23 +9,23 @@ if strcmpi(mode,'signal')
 
     if prob_false_alarm == 0.1
 
-        threshold = 0.2107;
+        threshold = 4.6052;
 
     end
 
     if prob_false_alarm == 0.01
 
-        threshold = 0.0201;
+        threshold = 9.2103;
 
     end
 
     if prob_false_alarm == 0.001
 
-        threshold = 0.0020;
+        threshold = 13.8155;
 
     end
        
-    %threshold = chi2inv(prob_false_alarm, 2);
+    %threshold = chi2inv(1 - prob_false_alarm, 2);
 
 end
 

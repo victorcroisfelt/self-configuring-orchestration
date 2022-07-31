@@ -8,7 +8,7 @@ plot_flag = false();
 M_vec = [32, 64];
 N_vec = [16, 32];
 K_vec = [8, 16];
-L_vec = [64, 128];
+L_vec = [16, 32];
 scenario_size_vec = [50,100];
 
 for M = M_vec

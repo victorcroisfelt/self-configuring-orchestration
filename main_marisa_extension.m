@@ -1,9 +1,9 @@
-%close all
-%clear all
+close all
+clear all
 
-%addpath('functions')
+addpath('functions')
 
-%plot_flag = false();
+plot_flag = false();
 
 %% Physical Parameters
 c = 3*10^8;   %physconst('LightSpeed'); % speed of light
@@ -29,7 +29,7 @@ sigma2n = 10^((-94-30)/10);
 %% BS Parameters
 
 % Number of BS antennas
-%M = 64;
+M = 64;
 
 % Transmit power at the BS = 20 dBm (-26)
 P = 10^((20-30)/10);
@@ -40,7 +40,7 @@ el_dist = 0.5;
 %% HRIS Parameters
 
 % Number of RIS elements on the x-axis
-%Nx = 32;
+Nx = 32;
 
 % Number of RIS elements on the y-axis
 Ny = 1;
@@ -54,7 +54,7 @@ eta = 0.8;
 %% UE Parameters
 
 % Number of UEs
-%K = 16;
+K = 16;
 
 % Transmit power at the UE = 20 dBm (-26)
 P_ue = 10^((20-30)/10);
@@ -62,7 +62,7 @@ P_ue = 10^((20-30)/10);
 %% System Parameters
 
 % Channel estimation relative length
-%L = 64;
+L = 64;
 
 % Channel estimation length
 tau_est = L * K;
@@ -76,7 +76,7 @@ tau_com = tau_est;
 %% Simulation Parameters
 
 % Range of probing relative lenght
-C_vec = 2.^(1:6);     % iterate
+C_vec = 2.^(1:log2(L));     % iterate
 
 % Range of probing length
 tau_pro = C_vec * K;
@@ -89,7 +89,7 @@ N_setup = 50;
 N_channel_realizations = 50;
 
 % Parameterized variable to define area of interest
-% scenario_size = 50;
+scenario_size = 250;
 
 %% Simulation Setup
 
@@ -193,8 +193,10 @@ for ind_setup = 1:N_setup
             [Y_r_pow] = received_signal_RIS(Theta_prob_pow, h_los, eta, pilots, P_ue, sigma2n);
             [Y_r_sig] = received_signal_RIS(Theta_prob_sig, h_los, eta, pilots, P_ue, sigma2n);
             
-            false_alarm_prob = 0.001;
+            false_alarm_prob_vec = [0.1, 0.01, 0.001];
+
             for ind_prob = 1:numel(false_alarm_prob_vec)
+   
                 false_alarm_prob = false_alarm_prob_vec(ind_prob);
 
                 [Theta_opt_sig, hat_det_rate_sig, th_det_rate_sig] = MARISA_EXTENSION(Y_r_pow, theta_in, false_alarm_prob, phiB_0_a, sigma2n, 'signal');
@@ -219,6 +221,7 @@ for ind_setup = 1:N_setup
 
                 MSE_cha_est_sig(ind_d,ind_prob,ind_setup,ind_ch) = MSE_sig;
                 MSE_cha_est_pow(ind_d,ind_prob,ind_setup,ind_ch) = MSE_pow;
+
             end
         end
     end
