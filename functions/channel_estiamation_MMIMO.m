@@ -48,13 +48,14 @@ for k =1:K
         for m =1:M
             for m_prime = 1:M
                 if m_prime ~= m
-                    E_bound(k,i) = E_bound(k,i) + real(H_bar(m,k).*conj(H_bar(m_prime,k)).* conj(H_circ_star(m,i)).*H_circ(m_prime,k));
+                    E_bound(k,i) = E_bound(k,i) + H_bar(m,k).*conj(H_bar(m_prime,k)).* conj(H_circ_star(m,i)).*H_circ(m_prime,k);
                 end
             end
         end
     end
 end
 
+E_bound = real(E_bound);
 
 S_bound = zeros(K,1);
 I_bound = zeros(K,1);
