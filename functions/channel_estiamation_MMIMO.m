@@ -23,7 +23,7 @@ H_bar_hat = Y_bar ./ sqrt(P_ue)./K;
 % noise realization during communication
 %N_b_comm = (randn(M,K) + 1i*randn(M,K))*sqrt(sigma2n/2);
 
-N_b_comm_test = (randn(M,K*1000) + 1i*randn(M,K*1000))*sqrt(sigma2n/2);
+N_b_comm_test = (randn(M,K*100) + 1i*randn(M,K*100))*sqrt(sigma2n/2);
 %A = mean(abs(H_bar_hat(:,2)'*N_b_comm_test).^2);
 
 
@@ -48,7 +48,7 @@ for k =1:K
         for m =1:M
             for m_prime = 1:M
                 if m_prime ~= m
-                    E_bound(k,i) = E_bound(k,i) + abs(H_bar(m,k).*conj(H_bar(m_prime,k)).* conj(H_circ_star(m,i)).*H_circ(m_prime,k)).^2;
+                    E_bound(k,i) = E_bound(k,i) + real(H_bar(m,k).*conj(H_bar(m_prime,k)).* conj(H_circ_star(m,i)).*H_circ(m_prime,k));
                 end
             end
         end
