@@ -1,7 +1,7 @@
 clear all
 close all
 
-load('RESULTS_M64_N32_K16_L64_100x100')
+load('RESULTS_M64_N16_K16_L128_50x50.mat')
 
 avg_hat_detected_ue_pow = mean(mean(hat_detected_ue_pow,4),3); 
 avg_hat_detected_ue_sig = mean(mean(hat_detected_ue_sig,4),3);
