@@ -66,7 +66,7 @@ SE = (tau_c-tau_est)./tau_c.*log2(1+SINR);
 %     N_bound(k) = sigma2n*(abs(H_bar(:,k)'*H_bar(:,k)) + M/(L*K*K).*(sigma2n/P_ue));
 % end
 
-SINR_bound = 0:%S_bound./(I_bound+N_bound);
+SINR_bound = 0;%S_bound./(I_bound+N_bound);
 SE_bound = 0;%(tau_c-tau_est)./tau_c.*log2(1+SINR_bound);
 
 
