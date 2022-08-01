@@ -122,6 +122,9 @@ hat_detected_ue_pow = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel
 th_detected_ue_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
 th_detected_ue_pow = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
 
+distance_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
+distance_pow = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
+
 MSE_cha_est_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
 MSE_cha_est_pow = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
 
@@ -180,6 +183,9 @@ for ind_setup = 1:N_setup
     
     par_th_detected_ue_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
     par_th_detected_ue_pow = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
+
+    par_distance_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
+    par_distance_pow = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
     
     par_MSE_cha_est_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
     par_MSE_cha_est_pow = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
@@ -235,17 +241,18 @@ for ind_setup = 1:N_setup
    
                 false_alarm_prob = false_alarm_prob_vec(ind_prob);
 
-                [Theta_opt_sig, hat_det_rate_sig, th_det_rate_sig] = MARISA_EXTENSION(Y_r_pow, theta_in, false_alarm_prob, phiB_0_a, sigma2n, 'signal');
-                [Theta_opt_pow, hat_det_rate_pow, th_det_rate_pow] = MARISA_EXTENSION(Y_r_pow, theta_in, false_alarm_prob, phiB_0_a, sigma2n, 'power');
+                [Theta_opt_sig, hat_det_rate_sig, th_det_rate_sig, dist_sig] = MARISA_EXTENSION(Y_r_sig, theta_in, false_alarm_prob, phiB_0_a, sigma2n, 'signal');
+                [Theta_opt_pow, hat_det_rate_pow, th_det_rate_pow, dist_pow] = MARISA_EXTENSION(Y_r_pow, theta_in, false_alarm_prob, phiB_0_a, sigma2n, 'power');
 
                 % Equivalent BS-UE channel
                 Theta_over_blocks_pow = cat(3, Theta_prob_pow, repmat(Theta_opt_pow,[1,1,L-C])); % to change after hris optimization
-                [SINR_pow, SE_pow, SINR_b_pow, SE_b_pow]   = channel_estimation_MMIMO(Theta_prob_pow, Theta_opt_pow, M, C, L, K, tau_est, tau_c, sigma2n,P_ue, G_los, h_los, h_D_los, eta);
-                [SINR_sig, SE_sig, SINR_b_sig, SE_b_sig]   = channel_estimation_MMIMO(Theta_prob_sig, Theta_opt_sig, M, C, L, K, tau_est, tau_c, sigma2n,P_ue, G_los, h_los, h_D_los, eta);
+                                                            
+                [SINR_pow, SE_pow, SINR_b_pow, SE_b_pow] = channel_estimation_MMIMO(Theta_prob_pow, Theta_opt_pow, M, C, L, K, tau_est, tau_c, sigma2n, P_ue, G_los, h_los, h_D_los, eta);
+                [SINR_sig, SE_sig, SINR_b_sig, SE_b_sig] = channel_estimation_MMIMO(Theta_prob_sig, Theta_opt_sig, M, C, L, K, tau_est, tau_c, sigma2n, P_ue, G_los, h_los, h_D_los, eta);
 
                 % Channel estimation mse
-                [MSE_sig] = channel_estimation_MSE(M,L,K,sigma2n,P_ue,G_los,Theta_prob_sig, Theta_opt_sig, h_los, eta);
-                [MSE_pow] = channel_estimation_MSE(M,L,K,sigma2n,P_ue,G_los,Theta_prob_pow, Theta_opt_pow, h_los, eta);
+                [MSE_sig] = channel_estimation_MSE(M, L, K, sigma2n, P_ue, G_los, Theta_prob_sig, Theta_opt_sig, h_los, eta);
+                [MSE_pow] = channel_estimation_MSE(M, L, K, sigma2n, P_ue, G_los, Theta_prob_pow, Theta_opt_pow, h_los, eta);
 
                 % Save simulation results
                 par_hat_detected_ue_sig(ind_d, ind_prob, ind_ch) = hat_det_rate_sig;
@@ -253,6 +260,9 @@ for ind_setup = 1:N_setup
                 
                 par_th_detected_ue_sig(ind_d, ind_prob, ind_ch) = th_det_rate_sig;
                 par_th_detected_ue_pow(ind_d, ind_prob, ind_ch) = th_det_rate_pow;
+
+                par_distance_sig(ind_d, ind_prob, ind_ch) = dist_sig;
+                par_distance_pow(ind_d, ind_prob, ind_ch) = dist_pow;
 
                 par_MSE_cha_est_sig(ind_d, ind_prob, ind_ch) = MSE_sig;
                 par_MSE_cha_est_pow(ind_d, ind_prob, ind_ch) = MSE_pow;
@@ -280,6 +290,9 @@ for ind_setup = 1:N_setup
     th_detected_ue_sig(:, :, :, ind_setup) = par_th_detected_ue_sig;
     th_detected_ue_pow(:, :, :, ind_setup) = par_th_detected_ue_pow;
 
+    distance_sig(:, :, :, ind_setup) = par_distance_sig;
+    distance_pow(:, :, :, ind_setup) = par_distance_pow;    
+    
     MSE_cha_est_sig(:, :, :, ind_setup) = par_MSE_cha_est_sig;
     MSE_cha_est_pow(:, :, :, ind_setup) = par_MSE_cha_est_pow;
     

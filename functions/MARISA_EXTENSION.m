@@ -1,4 +1,4 @@
-function [Theta_out, hat_prob_detection, true_prob_detection] = MARISA_EXTENSION(Y, Codebook, prob_false_alarm, phi_B, sigma2n, mode)
+function [Theta_out, hat_prob_detection, true_prob_detection, distance] = MARISA_EXTENSION(Y, Codebook, prob_false_alarm, phi_B, sigma2n, mode)
 
 % Extract sizes 
 N = size(Y,1); % number of RIS elements
@@ -32,7 +32,7 @@ if strcmpi(mode,'signal')
     end
     
     % Normalizing
-    Comb_matrix = (1/N).*Comb_matrix;
+    Comb_matrix = (1/N) .* Comb_matrix;
     
     Y_comb = zeros(D,K,C);
     for c = 1:C
@@ -55,8 +55,8 @@ if strcmpi(mode,'signal')
     detected_ue = max_pow > (2*N*C/sigma2n)^-1 * threshold;
     
     % Obtain estimated CSI for the detected UEs in Eqs. (16) and (17) 
-    Theta_hat = Comb_matrix(:, max_ind);
-    Theta_hat = Theta_hat(:, detected_ue);
+    Theta_hat = Codebook(:, max_ind);
+    Theta_hat_masked = Theta_hat(:, detected_ue);
     A_hat = max_pow(detected_ue);
     
     % Compute true probability of detection
@@ -105,7 +105,7 @@ if strcmpi(mode,'power')
     
     % Obtain estimated CSI for the detected UEs
     Theta_hat = theta(:, max_ind);
-    Theta_hat = Theta_hat(:, detected_ue);
+    Theta_hat_masked = Theta_hat(:, detected_ue);
     A_hat = max_pow(detected_ue);
     
     % Compute true probability of detection 
@@ -123,14 +123,26 @@ end
 % Compute estimated probability of detection
 hat_prob_detection = sum(detected_ue) / K;
 
+% Compute desired case 
+%v_d = sum(Theta_hat.*max_pow./sum(max_pow), 2);
+v_d = mean(Theta_hat, 2);
+v_d = sqrt(N) * (v_d/norm(v_d));
+v_d(isnan(v_d)) = 0;
+
 % Compute normalized directions according to Eqs. (32) and (33)
-%v_U = sum(Theta_hat.*sqrt(A_hat)./max(sqrt(A_hat)), 2);
-v_U = sum(Theta_hat.*A_hat./sum(A_hat), 2);
-%v_U = v_U./max(abs(v_U));
+%v_U = sum(Theta_hat_masked.*A_hat./sum(A_hat), 2);
+v_U = mean(Theta_hat_masked, 2);
+v_U = sqrt(N) * (v_U/norm(v_U));
 v_U(isnan(v_U)) = 0;
+
+% Compute desired optimal reflection direction
+theta_desired = v_d .* conj(v_B);
 
 % Compute optimal reflection direction according to Eq. (32)
 theta_out = v_U .* conj(v_B);
 Theta_out = diag(theta_out);
+
+% Compute distances between the two
+distance = norm(theta_out - theta_desired);
 
 end

@@ -27,6 +27,6 @@ M = 64
 Nx = 16
 K = 16
 L = 128
-scenario_size = 100
+scenario_size = 250
 
-main_marisa_extension
+main_marisa_extension_parfor
