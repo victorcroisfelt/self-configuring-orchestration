@@ -1,4 +1,4 @@
-function [MSE] = channel_estiamation_MSE(M,L,K,sigma2n,power, G, Theta_prob, Theta_opt, H, eta)
+function [MSE] = channel_estimation_MSE(M,L,K,sigma2n,power, G, Theta_prob, Theta_opt, H, eta)
 
 C = size(Theta_prob, 3);
 

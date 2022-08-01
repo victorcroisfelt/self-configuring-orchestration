@@ -124,8 +124,9 @@ end
 hat_prob_detection = sum(detected_ue) / K;
 
 % Compute normalized directions according to Eqs. (32) and (33)
-v_U = sum(Theta_hat.*sqrt(A_hat)./max(sqrt(A_hat)), 2);
-v_U = v_U./max(abs(v_U));
+%v_U = sum(Theta_hat.*sqrt(A_hat)./max(sqrt(A_hat)), 2);
+v_U = sum(Theta_hat.*A_hat./sum(A_hat), 2);
+%v_U = v_U./max(abs(v_U));
 v_U(isnan(v_U)) = 0;
 
 % Compute optimal reflection direction according to Eq. (32)
