@@ -110,7 +110,7 @@ phiB_0_d = atan2(ris_0(2)-bs(2), ris_0(1)-bs(1)); %-45 deg Angle of Departure BS
 d_0_G = norm(bs-ris_0);                           % Distance BS-RIS
 
 % pilots
-pilots = diag(ones(K, 1));
+pilots = sqrt(K) * diag(ones(K, 1));
 
 % false_alarm
 false_alarm_prob_vec = [0.001, 0.01, 0.1];
@@ -212,6 +212,8 @@ for ind_setup = 1:N_setup
         [block_u_0] = blockage_path(d_u_0, lambda_b, radius_B, height_B, height_U, hheight_A); % RIS block
         [block_Bu] = blockage_path(d_Bu, lambda_b, radius_B, height_B, height_U, hheight_A); % BS block
         
+        block_u_0(:) = 0;
+
         % Channels
         [a_R_los, ~, G_los, h_los, h_D_los, a_BSU_los, a_BSR_los] = compute_channels(d_0_G, d_u_0, d_Bu, [beta,beta_nlos], N, M, phiB_0_a, phiB_0_d, phiU_0, phiUB,el_dist, block_u_0, block_Bu);
 
@@ -251,8 +253,8 @@ for ind_setup = 1:N_setup
                 [SINR_sig, SE_sig, SINR_b_sig, SE_b_sig] = channel_estimation_MMIMO(Theta_prob_sig, Theta_opt_sig, M, C, L, K, tau_est, tau_c, sigma2n, P_ue, G_los, h_los, h_D_los, eta);
 
                 % Channel estimation mse
-                [MSE_sig] = channel_estimation_MSE(M, L, K, sigma2n, P_ue, G_los, Theta_prob_sig, Theta_opt_sig, h_los, eta);
-                [MSE_pow] = channel_estimation_MSE(M, L, K, sigma2n, P_ue, G_los, Theta_prob_pow, Theta_opt_pow, h_los, eta);
+                [MSE_sig] = channel_estimation_MSE(M, C, L, K, sigma2n, P_ue, G_los, Theta_prob_sig, Theta_opt_sig, h_los, h_D_los, eta);
+                [MSE_pow] = channel_estimation_MSE(M, C, L, K, sigma2n, P_ue, G_los, Theta_prob_pow, Theta_opt_pow, h_los, h_D_los, eta);
 
                 % Save simulation results
                 par_hat_detected_ue_sig(ind_d, ind_prob, ind_ch) = hat_det_rate_sig;

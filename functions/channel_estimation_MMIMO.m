@@ -10,10 +10,10 @@ Theta_over_blocks = cat(3, Theta_prob, repmat(Theta_opt,[1,1,L-C]));
 [H_circ_star] = equivalent_BS_UE_channel(Theta_opt, H, G, H_D, eta);
 
 % noise realization during channel estimation
-N_b = (randn(M,K,L) + 1i*randn(M,K,L))*sqrt(sigma2n/2);
+N_b = (randn(M,K,L) + 1i*randn(M,K,L))*sqrt(K * sigma2n/2);
 
 % desired estimate of the channel
-H_bar = 1./L.*sum(H_circ,3);
+H_bar = 1./L * sum(H_circ, 3);
 
 % channel estimator input
 Y_bar = sqrt(P_ue).*K.* H_bar + 1./L.*sum(N_b,3);
@@ -46,9 +46,9 @@ E_bound = zeros(K,K);
 
 for k =1:K
 
-    for  i = 1:K
+    for i = 1:K
        
-        V_bound(k,i) =  sum((abs(H_bar_hat(:,k)).^2 + 1./(L*K*K) * sigma2n/P_ue) .* abs(H_circ_star(:,i)).^2);
+        V_bound(k,i) =  sum((abs(H_bar_hat(:, k)).^2 + 1./(L*K) * sigma2n/P_ue) .* abs(H_circ_star(:, i)).^2);
         
         for m =1:M
          
@@ -56,7 +56,7 @@ for k =1:K
             
                 if m_prime ~= m
 
-                    E_bound(k,i) = E_bound(k,i) + conj(H_bar(m,k)) .* H_bar(m_prime,k) .* H_circ_star(m, k) .* conj(H_circ_star(m_prime, k));
+                    E_bound(k,i) = E_bound(k,i) + conj(H_bar(m, k)) .* H_bar(m_prime, k) .* H_circ_star(m, i) .* conj(H_circ_star(m_prime, i));
 
                 end
 
@@ -75,9 +75,9 @@ I_bound = zeros(K,1);
 N_bound = zeros(K,1);
 
 for k =1:K
-    S_bound(k) = P_ue * abs(H_bar_hat(:,k)' * H_circ_star(:,k)).^2;
-    I_bound(k) = P_ue * sum(V_bound(k,:) + E_bound(k,:)) - S_bound(k);
-    N_bound(k) = sigma2n * (abs(H_bar(:,k)' * H_bar(:,k)) + M/(L*K*K).*(sigma2n/P_ue));
+    S_bound(k) = P_ue * abs(H_bar_hat(:, k)' * H_circ_star(:, k)).^2;
+    I_bound(k) = P_ue * sum(V_bound(k, :) + E_bound(k, :)) - S_bound(k);
+    N_bound(k) = sigma2n * (norm(H_bar(:,k))^2 + M/(L*K).*(sigma2n/P_ue));
 end
 
 SINR_bound = S_bound ./ (I_bound + N_bound);

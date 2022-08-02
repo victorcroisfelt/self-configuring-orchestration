@@ -12,7 +12,7 @@ plt.rc('text.latex', preamble=r'\usepackage{amssymb,amsmath,amsfonts,amsthm}')
 ########################################
 # Load data
 ########################################
-mat = scipy.io.loadmat('data/RESULTS_M64_N16_K16_L128_250x250_max.mat')
+mat = scipy.io.loadmat('data/RESULTS_M64_N16_K16_L128_250x250.mat')
 
 # Loading parameters 
 L = np.squeeze(mat['L'])
@@ -32,11 +32,11 @@ distance_sig = mat['distance_sig']
 mse_cha_est_pow = mat['MSE_cha_est_pow']
 mse_cha_est_sig = mat['MSE_cha_est_sig']
 
-sinr_est_pow = mat['SINR_est_sig']
-sinr_est_sig = mat['SINR_est_pow']
+sinr_est_pow = mat['SINR_est_pow']
+sinr_est_sig = mat['SINR_est_sig']
 
-se_est_pow = mat['SE_est_sig']
-se_est_sig = mat['SE_est_pow']
+se_est_pow = mat['SE_est_pow']
+se_est_sig = mat['SE_est_sig']
 
 # Flatten results in terms of setup and channel realizations
 th_detected_ue_pow = th_detected_ue_pow.reshape(*th_detected_ue_pow.shape[:2], -1)
@@ -54,8 +54,11 @@ mse_cha_est_sig = mse_cha_est_sig.reshape(*mse_cha_est_sig.shape[:2], -1)
 sinr_est_pow = sinr_est_pow.reshape(*sinr_est_pow.shape[:3], -1).mean(axis=0)
 sinr_est_sig = sinr_est_sig.reshape(*sinr_est_sig.shape[:3], -1).mean(axis=0)
 
-se_est_pow = int(mat['tau_com'])/int(mat['tau_c']) * np.log2(sinr_est_pow) #se_est_pow.reshape(*se_est_pow.shape[:3], -1).mean(axis=0)
-se_est_sig = int(mat['tau_com'])/int(mat['tau_c']) * np.log2(sinr_est_sig) #se_est_sig.reshape(*se_est_sig.shape[:3], -1).mean(axis=0)
+#se_est_pow = int(mat['tau_com'])/int(mat['tau_c']) * np.log2(sinr_est_pow) 
+#se_est_sig = int(mat['tau_com'])/int(mat['tau_c']) * np.log2(sinr_est_sig) 
+
+se_est_pow = se_est_pow.reshape(*se_est_pow.shape[:3], -1).mean(axis=0)
+se_est_sig = se_est_sig.reshape(*se_est_sig.shape[:3], -1).mean(axis=0)
 
 ########################################
 # Plot
@@ -67,7 +70,7 @@ xticks = [0, 0.2, 0.4, 0.6, 0.8, 1.0]
 fig, ax = plt.subplots(figsize=fig_size)
 
 #linestyles = ['-', '--', '-.']
-markers = ['.', '+', 'x']
+markers = ['.', 'v', '^']
 dumb_list = []
 
 # Go through all false alarm probabilities
@@ -147,7 +150,7 @@ ax.set_yscale('log')
 
 #ax.legend(fontsize='x-small', framealpha=0.5)
 
-ax.set_ylim([10e-6, 10e-1])
+ax.set_ylim([10e-3, 10e0])
 ax.set_xticks(xticks)
 
 ax.grid(color='#E9E9E9', linestyle='--', linewidth=0.5)
@@ -264,5 +267,3 @@ ax.grid(color='#E9E9E9', linestyle='--', linewidth=0.5)
 plt.tight_layout()
 
 #plt.show()
-
-

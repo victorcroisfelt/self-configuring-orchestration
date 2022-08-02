@@ -13,12 +13,9 @@ from matplotlib import rc
 
 
 # LaTeX type definitions
-
-rc('font', **{'family': 'sans serif', 'serif': ['Computer Modern'], 'size': 14})
-
-#rc('text', usetex=True)
-
-
+plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern'], 'size': 14})
+plt.rc('text', usetex=True)
+plt.rc('text.latex', preamble=r'\usepackage{amssymb,amsmath,amsfonts,amsthm,mathtools,cuted,bbold} \usepackage[cmintegrals]{newtxmath}')
 
 #plt.rcParams.update({
 
@@ -38,7 +35,7 @@ rc('font', **{'family': 'sans serif', 'serif': ['Computer Modern'], 'size': 14})
 
 ########################################
 
-mat = scipy.io.loadmat('RES_Figure_effect_M64_N16_K16_L32_250x250.mat')
+mat = scipy.io.loadmat('data/RES_Figure_effect_M64_N16_K16_L32_250x250.mat')
 
 
 
@@ -142,23 +139,34 @@ ax.legend()
 
 ax.set_xlabel(r'Subblock $t$')
 
-ax.set_ylabel(r'$\|\|\mathring{\mathbf{h}}_k\|\|_2^2$ [dB]')
+ax.set_ylabel('Intensity of equivalent \n channel, $\lVert\mathring{\mathbf{h}}_k\lVert_2^2$ [dB]')
 
 
 
 
 
-ax.set_xticks([8, 16, 24, 32, 40, 48, 64])
+ax.set_xticks([1, 8, 16, 24, 32, 40, 48, 56, 64])
 
 #ax.grid(color='#E9E9E9', linestyle='--', linewidth=0.5)
 
+plt.xticks(fontsize=10)
+plt.yticks(fontsize=10)
 
+plt.subplots_adjust(
+	left = 0.14,  	# the left side of the subplots of the figure
+	right = 0.99,   	# the right side of the subplots of the figure
+	bottom = 0.17,  	# the bottom of the subplots of the figure
+	top = 0.82,     	# the top of the subplots of the figure
+	wspace = 0.5,  	# the amount of width reserved for space between subplots,
+    	           	# expressed as a fraction of the average axis width
+	hspace = 0.05   	# the amount of height reserved for space between subplots,
+              	 	# expressed as a fraction of the average axis height
+              )
 
-plt.tight_layout()
 
 plt.savefig('figures/hris_effect.pdf', dpi='figure', format='pdf', transparent='True')
 
-
+plt.show()
 
 #####
 
