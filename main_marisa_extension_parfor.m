@@ -12,27 +12,22 @@ lambda = c/freq; % lambda [m]
 
 %% Channel Parameters
 
-% Blockage parameters
-lambda_b = 1.0; % density of pedestrians
-radius_B = 0.6; % [m] radius of pedestrians
-height_B = 1.7; % [m] height of pedestrians
-height_U = 1.5; % [m] height of UEs
-hheight_A = 6;  % [m] height of NR
-
 % Pathloss exponent
-beta = 2; % LoS
-beta_nlos = 4; % NLoS
+beta = 2;
 
-% Noise power (-80)
-sigma2n = 10^((-94-30)/10);
+% NLoS variance 
+nlos_var = 1;
+
+% Noise power
+sigma2n = 10^((-94 - 30)/10);
 
 %% BS Parameters
 
 % Number of BS antennas
-% M = 64;
+M = 64;
 
 % Transmit power at the BS = 20 dBm (-26)
-P = 10^((20-30)/10);
+P_bs = 10^((20 - 30)/10);
 
 % RIS/BSantenna elements interdistance normalized wrt lambda
 el_dist = 0.5;
@@ -40,7 +35,7 @@ el_dist = 0.5;
 %% HRIS Parameters
 
 % Number of RIS elements on the x-axis
-% Nx = 32;
+Nx = 32;
 
 % Number of RIS elements on the y-axis
 Ny = 1;
@@ -49,20 +44,20 @@ Ny = 1;
 N = Nx * Ny;
 
 % HRIS absorption parameter
-eta = 0.8;
+eta = 0.5;
 
 %% UE Parameters
 
 % Number of UEs
-% K = 16;
+K = 16;
 
 % Transmit power at the UE = 10 dBm
-P_ue = 10^((10-30)/10);
+P_ue = 10^((10 - 30)/10);
 
 %% System Parameters
 
 % Channel estimation relative length
-% L = 64;
+L = 64;
 
 % Channel estimation length
 tau_est = L * K;
@@ -76,7 +71,7 @@ tau_com = tau_est;
 %% Simulation Parameters
 
 % Range of probing relative lenght
-C_vec = 2.^(1:log2(L));     % iterate
+C_vec = 2.^(1:log2(L)); % iterate
 
 % Range of probing length
 tau_pro = C_vec * K;
@@ -89,7 +84,7 @@ N_setup = 50;
 N_channel_realizations = 50;
 
 % Parameterized variable to define area of interest
-% scenario_size = 250;
+scenario_size = 100;
 
 %% Simulation Setup
 
@@ -97,48 +92,50 @@ N_channel_realizations = 50;
 x_lim = [0, scenario_size];
 y_lim = [-scenario_size, scenario_size];
 
-% RISs
-ris_0 = [0;y_lim(1)];                                        % Coordinates of RIS
-ris_0_el = ris_0+lambda./2.*cat(1, 0:N-1, zeros(1, N));         % Coordinates of RIS elements
+% Coordinates of RIS
+pos_ris = 0 + 1j * y_lim(1);
+
+% Coordinates of RIS elements
+pos_ris_els = pos_ris + lambda./2. * (0:N-1);         
+pos_ris_els = pos_ris_els - ((pos_ris_els(end) - pos_ris_els(1))/2);
 
 % BS coordinates
-bs = [-scenario_size;0];
+pos_bs = -scenario_size + 1j * 0;
 
-% Geometry (downlink)
-phiB_0_a = atan2(bs(2)-ris_0(2), bs(1)-ris_0(1)); %135 deg Angle of Arrival BS-RIS
-phiB_0_d = atan2(ris_0(2)-bs(2), ris_0(1)-bs(1)); %-45 deg Angle of Departure BS-RIS
-d_0_G = norm(bs-ris_0);                           % Distance BS-RIS
+% Coordinates of BS elements
+pos_bs_els = pos_bs + lambda./2. * (0:M-1);         
+pos_bs_els = pos_bs_els - ((pos_bs_els(end) - pos_bs_els(1))/2);
 
-% pilots
+% Pilots
 pilots = sqrt(K) * diag(ones(K, 1));
 
-% false_alarm
+% False_alarm values
 false_alarm_prob_vec = [0.001, 0.01, 0.1];
 
 %% Results
-hat_detected_ue_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
 hat_detected_ue_pow = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
+hat_detected_ue_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
 
-th_detected_ue_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
 th_detected_ue_pow = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
+th_detected_ue_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
 
-distance_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
 distance_pow = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
+distance_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
 
-MSE_cha_est_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
 MSE_cha_est_pow = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
+MSE_cha_est_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
 
-SINR_est_sig = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
 SE_est_sig = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
+SINR_est_sig = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
 
-SINR_est_pow = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
 SE_est_pow = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
+SINR_est_pow = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
 
-SINR_bound_sig = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
 SE_bound_sig = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
+SINR_bound_sig = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
 
-SINR_bound_pow = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
 SE_bound_pow = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
+SINR_bound_pow = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations, N_setup);
 
 %% Simulation
 
@@ -151,62 +148,47 @@ for ind_setup = 1:N_setup
 
     tic
 
-    ue_s = [(x_lim(2)-x_lim(1))*rand(1, K, N_setup) + x_lim(1); (y_lim(2)-y_lim(1))*rand(1, K, N_setup)+y_lim(1)]; % UEs coordinates --- drawn in x between [x_lim(1), x_lim(2)], y between [y_lim(1), y_lim(2)]
-    
-    %ue = [(x_lim(2)-x_lim(1))*rand(1,K)+x_lim(1); (y_lim(2)-y_lim(1))*rand(1,K)+y_lim(1)];
-    ue = ue_s(:, 1:K, ind_setup);
-    
-    % Compute geometry wrt BS
-    rot_angle = 90/180*pi;
-    [bs_rot, ue_rot, ~] = rotate_geometry(rot_angle, bs, ue, ris_0_el, false());
-    
-    % Compute UE angles wrt BS and RIS
-    phiUB = atan2(ue_rot(2, :) - bs_rot(2), ue_rot(1, :)-bs_rot(1))';
-    phiU_0 = atan2(ue(2, :)-ris_0(2), ue(1, :)-ris_0(1))';
-    
-    % Compute UE distances wrt BS and RIS
-    d_Bu = zeros(K, 1);
-    d_u_0 = zeros(K, 1);
-    
-    for k=1:K
+    % Drop UEs
+    pos_ues = (x_lim(2)-x_lim(1)) * rand(K, 1) + x_lim(1); 
+    pos_ues = pos_ues + 1j * ((y_lim(2)-y_lim(1)) * rand(K, 1) + y_lim(1));
+   
+    % Compute LOS components 
+    los_components(lambda, M, N, K, pos_bs, pos_bs_els, pos_ris, pos_ris_els, pos_ues)
 
-        % Distance BS-UE
-        d_Bu(k) = norm(bs - ue(:, k));   
 
-        % Distance RIS-UE
-        d_u_0(k) = norm(ris_0-ue(:, k));   
 
-    end
-
-    par_hat_detected_ue_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
+    % Prepare to save parfor results
     par_hat_detected_ue_pow = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
-    
-    par_th_detected_ue_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
+    par_hat_detected_ue_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
+
     par_th_detected_ue_pow = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
+    par_th_detected_ue_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
 
-    par_distance_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
     par_distance_pow = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
-    
-    par_MSE_cha_est_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
-    par_MSE_cha_est_pow = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
-    
-    par_SINR_est_sig = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
-    par_SE_est_sig = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
-    
-    par_SINR_est_pow = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
-    par_SE_est_pow = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
-    
-    par_SINR_bound_sig = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
-    par_SE_bound_sig = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
-    
-    par_SINR_bound_pow = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
-    par_SE_bound_pow = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
+    par_distance_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
 
+    par_MSE_cha_est_pow = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
+    par_MSE_cha_est_sig = zeros(numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
+
+    par_SE_est_sig = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
+    par_SINR_est_sig = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
+
+    par_SE_est_pow = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);    
+    par_SINR_est_pow = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
+
+    par_SE_bound_sig = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);    
+    par_SINR_bound_sig = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
+
+    par_SE_bound_pow = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
+    par_SINR_bound_pow = zeros(K, numel(C_vec), numel(false_alarm_prob_vec), N_channel_realizations);
+
+
+    % Number of simulation points to go over
     length_Cvec = length(C_vec);
     length_fa = length(false_alarm_prob_vec);
 
-
-    parfor ind_ch =1:N_channel_realizations
+    %parfor
+    for ind_ch =1:N_channel_realizations
         
         % Compute blockage probability of paths
         [block_u_0] = blockage_path(d_u_0, lambda_b, radius_B, height_B, height_U, hheight_A); % RIS block
