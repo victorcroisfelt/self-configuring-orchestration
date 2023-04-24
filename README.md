@@ -15,10 +15,9 @@ To obviate the control of reflective intelligent surfaces (RISs) and the related
 
 ## Content
 The code provided here can be used to simulate Figs. 6 and 7 of the paper. The code is organized in the following way:
-  - sim_figureX.py: simulation scripts that stores the data points need to plot each figure as a .npz file.
-  - /data: here you can find the .npz files outputed by each simulation script. We should run by yourself, since the files are too large to share using GitHub.
-  - /figs: where the .pdfs of the figures are saved.
-  - /plots: here you can find a script named as plot_figureX.py for each figure; these scripts load the .npz files saved in /data and output the figures as both pdf and tikz.
+  - sim_figureX.py: simulation scripts that stores the data points need to plot each figure as a .npz file in /data folder.
+  - /data: here you can find the .npz files outputed by each simulation script. NOTE: you should run the simulations scripts by yourself, since the files are too large to share using GitHub.
+  - plot_figureX: scripts to plot each one of the figures by loading the .npz files. The output of this scripts is the corresponding figure in tikz.
   - /src: define classes and functions needed to run the simulations.
   - /tikz: where the .tex's of the figures are saved.
 
@@ -26,4 +25,4 @@ The code provided here can be used to simulate Figs. 6 and 7 of the paper. The c
 This code is subject to the MIT license. If you use any part of this repository for research, please consider to cite our aforementioned work.
 
 ## Acknowledgement
-This work was supported by the Villum Investigator Grant “WATER” from the Velux Foundation, Denmark.
+This work was supported by the Villum Investigator Grant “WATER” from the Villum Fonden, Denmark.
