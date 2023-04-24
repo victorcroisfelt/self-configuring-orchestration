@@ -2,9 +2,9 @@
 
 This is a research-oriented code package that is primarily intended to allow readers to replicate the results of the article mentioned below and also encourage and accelerate further research on this topic:
 
+Croisfelt, V., Devoti, F., Saggese, F., Leyva-Mayorga, I., Sciancalepore, V., Costa-Pérez, X., and Popovski, P., “An Orchestration Framework for Open System Models of Reconfigurable Intelligent Surfaces”, arXiv e-prints, 2023. doi:10.48550/arXiv.2304.10858.
 
-
-A pre-print version is available on: , which has a different content from the published one.
+A pre-print version is available on: https://arxiv.org/abs/2304.10858.
 
 I hope this content helps in your research and contributes to building the precepts behind open science. Remarkably, in order to boost the idea of open science and further drive the evolution of science, I also motivate you to share your published results to the public.
 
