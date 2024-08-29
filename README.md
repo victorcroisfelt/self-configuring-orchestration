@@ -26,3 +26,14 @@ This code is subject to the MIT license. If you use any part of this repository 
 
 ## Acknowledgement
 This work was supported by the Villum Investigator Grant “WATER” from the Villum Fonden, Denmark.
+
+```bibtex
+@misc{croisfelt2024physicallayerorchestrationframeworkopen,
+      title={A Physical-Layer Orchestration Framework for Open System Models of Autonomous RISs}, 
+      author={Victor Croisfelt and Francesco Devoti and Fabio Saggese and Vincenzo Sciancalepore and Xavier Costa-Pérez and Petar Popovski},
+      year={2024},
+      eprint={2304.10858},
+      archivePrefix={arXiv},
+      primaryClass={cs.IT},
+      url={https://arxiv.org/abs/2304.10858}, 
+}
