@@ -1,0 +1,173 @@
+% This file was created with tikzplotlib v0.10.1.
+\begin{tikzpicture}
+
+\definecolor{darkorange25512714}{RGB}{255,127,14}
+\definecolor{forestgreen4416044}{RGB}{44,160,44}
+\definecolor{lavender233}{RGB}{233,233,233}
+\definecolor{lightgray204}{RGB}{204,204,204}
+\definecolor{steelblue31119180}{RGB}{31,119,180}
+
+\begin{axis}[
+legend cell align={left},
+legend style={
+  fill opacity=0.5,
+  draw opacity=1,
+  text opacity=1,
+  at={(0.97,0.03)},
+  anchor=south east,
+  draw=lightgray204
+},
+log basis x={10},
+tick align=outside,
+tick pos=left,
+x grid style={lavender233},
+xlabel={fraction of power absorbed, \(\displaystyle 1-\eta\)},
+xmajorgrids,
+xmin=7.07945784384056e-05, xmax=0.141253754462276,
+xmode=log,
+xtick style={color=black},
+xtick={1e-06,1e-05,0.0001,0.001,0.01,0.1,1,10},
+xticklabels={
+  \(\displaystyle {10^{-6}}\),
+  \(\displaystyle {10^{-5}}\),
+  \(\displaystyle {10^{-4}}\),
+  \(\displaystyle {10^{-3}}\),
+  \(\displaystyle {10^{-2}}\),
+  \(\displaystyle {10^{-1}}\),
+  \(\displaystyle {10^{0}}\),
+  \(\displaystyle {10^{1}}\)
+},
+y grid style={lavender233},
+ylabel={probability of detection, \(\displaystyle P_{\rm D}\)},
+ymajorgrids,
+ymin=0.55, ymax=1.05,
+ytick style={color=black},
+ytick={0.5,0.6,0.7,0.8,0.9,1,1.1},
+yticklabels={
+  \(\displaystyle {0.5}\),
+  \(\displaystyle {0.6}\),
+  \(\displaystyle {0.7}\),
+  \(\displaystyle {0.8}\),
+  \(\displaystyle {0.9}\),
+  \(\displaystyle {1.0}\),
+  \(\displaystyle {1.1}\)
+}
+]
+\addplot [line width=0pt, black, mark=triangle*, mark size=3, mark options={solid,rotate=180}]
+table {%
+9.9999999999989e-05 0.697328567504883
+0.000499999999999945 0.871094226837158
+0.001 0.90823221206665
+0.005 0.957707405090332
+0.01 0.969390869140625
+0.05 0.984569549560547
+0.1 0.987766265869141
+};
+\addlegendentry{power-based HRIS}
+\addplot [line width=0pt, black, mark=diamond*, mark size=3, mark options={solid}]
+table {%
+9.9999999999989e-05 0.995435237884521
+0.000499999999999945 0.999070644378662
+0.001 0.999517917633057
+0.005 0.999879360198975
+0.01 0.999943733215332
+0.05 0.999998569488525
+0.1 1
+};
+\addlegendentry{signal-based HRIS}
+\addplot [semithick, steelblue31119180]
+table {%
+9.9999999999989e-05 0.697328567504883
+0.000499999999999945 0.871094226837158
+0.001 0.90823221206665
+0.005 0.957707405090332
+0.01 0.969390869140625
+0.05 0.984569549560547
+0.1 0.987766265869141
+};
+\addlegendentry{$P_{\rm FA}=10^{-1}$}
+\addplot [semithick, darkorange25512714, dashed]
+table {%
+9.9999999999989e-05 0.535385608673096
+0.000499999999999945 0.789627552032471
+0.001 0.856209754943848
+0.005 0.932673454284668
+0.01 0.95270299911499
+0.05 0.97750997543335
+0.1 0.983105182647705
+};
+\addlegendentry{$P_{\rm FA}=10^{-2}$}
+\addplot [semithick, forestgreen4416044, dash pattern=on 1pt off 3pt on 3pt off 3pt]
+table {%
+9.9999999999989e-05 0.458512783050537
+0.000499999999999945 0.724196910858154
+0.001 0.813488483428955
+0.005 0.914859294891357
+0.01 0.9396653175354
+0.05 0.971354961395264
+0.1 0.979787826538086
+};
+\addlegendentry{$P_{\rm FA}=10^{-3}$}
+\addplot [semithick, steelblue31119180, mark=triangle*, mark size=3, mark options={solid,rotate=180}, forget plot]
+table {%
+9.9999999999989e-05 0.697328567504883
+0.000499999999999945 0.871094226837158
+0.001 0.90823221206665
+0.005 0.957707405090332
+0.01 0.969390869140625
+0.05 0.984569549560547
+0.1 0.987766265869141
+};
+\addplot [semithick, steelblue31119180, mark=diamond*, mark size=3, mark options={solid}, forget plot]
+table {%
+9.9999999999989e-05 0.995435237884521
+0.000499999999999945 0.999070644378662
+0.001 0.999517917633057
+0.005 0.999879360198975
+0.01 0.999943733215332
+0.05 0.999998569488525
+0.1 1
+};
+\addplot [semithick, darkorange25512714, dashed, mark=triangle*, mark size=3, mark options={solid,rotate=180}, forget plot]
+table {%
+9.9999999999989e-05 0.535385608673096
+0.000499999999999945 0.789627552032471
+0.001 0.856209754943848
+0.005 0.932673454284668
+0.01 0.95270299911499
+0.05 0.97750997543335
+0.1 0.983105182647705
+};
+\addplot [semithick, darkorange25512714, dashed, mark=diamond*, mark size=3, mark options={solid}, forget plot]
+table {%
+9.9999999999989e-05 0.992276668548584
+0.000499999999999945 0.998423099517822
+0.001 0.999196529388428
+0.005 0.999783992767334
+0.01 0.999884128570557
+0.05 0.999993801116943
+0.1 0.999999523162842
+};
+\addplot [semithick, forestgreen4416044, dash pattern=on 1pt off 3pt on 3pt off 3pt, mark=triangle*, mark size=3, mark options={solid,rotate=180}, forget plot]
+table {%
+9.9999999999989e-05 0.458512783050537
+0.000499999999999945 0.724196910858154
+0.001 0.813488483428955
+0.005 0.914859294891357
+0.01 0.9396653175354
+0.05 0.971354961395264
+0.1 0.979787826538086
+};
+\addplot [semithick, forestgreen4416044, dash pattern=on 1pt off 3pt on 3pt off 3pt, mark=diamond*, mark size=3, mark options={solid}, forget plot]
+table {%
+9.9999999999989e-05 0.989471435546875
+0.000499999999999945 0.99779748916626
+0.001 0.998911380767822
+0.005 0.999714851379395
+0.01 0.999841690063477
+0.05 0.999982833862305
+0.1 0.999999046325684
+};
+\end{axis}
+
+\end{tikzpicture}

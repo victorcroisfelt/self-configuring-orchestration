@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 from matplotlib import rc
 
-import tikzplotlib
+#import tikzplotlib
 
 rc('font', **{'family': 'sans serif', 'serif': ['Computer Modern']})
 rc('text', usetex=True)
@@ -70,6 +70,6 @@ ax.legend(framealpha=0.5)
 
 plt.tight_layout()
 
-tikzplotlib.save("tikz/figure6a.tex")
+#tikzplotlib.save("tikz/figure6a.tex")
 
 plt.show()

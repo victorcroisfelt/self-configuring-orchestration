@@ -3,20 +3,8 @@ from scipy.constants import speed_of_light
 
 from tqdm import tqdm
 
-from src.channel import array_steering_vector, pathloss, scenario, drop_ues
+from src.channel import scenario, drop_ues, generate_channel_realizations
 from src.mmimo import bs_comm
-
-
-# This is a sample Python script.
-
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
-
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
@@ -35,7 +23,7 @@ if __name__ == '__main__':
     # UE Parameters
     ##################################################
 
-    # Transmit power at the UE = 10 dBm
+    # Transmit power at the UE = 0 dBm
     P_ue = 10 ** ((0 - 30) / 10)
 
     ##################################################
@@ -50,138 +38,102 @@ if __name__ == '__main__':
     ##################################################
 
     # Physical parameters
-    freq = 28 * 10 ** 9
+    freq = 6 * 10 ** 9
     wavelength = speed_of_light / freq
 
     # NLoS variances
-    sigma2_dr = 0.1 * 6.1848 * 1e-12
-    sigma2_rr = 0.1 * 5.9603 * 1e-4
+    sigma2_dr = 0.1 * 9.07 * 1e-9
+    sigma2_rr = 0.1 * 1.12 * 1e-6
 
     # Noise power
     sigma2_n = 10 ** ((-94 - 30) / 10)
 
     # Generate scenario
-    pos_bs, pos_bs_els, pos_ris, _, _, _, guard_distance_ris = scenario(wavelength, M, 32)
+    pos_bs, pos_bs_els, pos_ris, pos_ris_els, bs_ris_channels, ris_bs_steering, guard_distance_ris = scenario(wavelength, M, N=32)
 
     # Maximum distance
-    distance_max = 100
+    #distance_max = 100
 
     ##################################################
     # Simulation Parameters
     ##################################################
 
     # Define number of setups
-    n_setups = 128
+    n_setups = 100
 
     # Define number of channel realizations
-    n_channels = 64
+    n_channels = 100
 
     # Define number of noise realizations
-    n_noise = 64
+    n_noise = 100
 
-    # Krange
-    K_range = np.array([1, 2, 4, 8, 16])
-    n_yaxis = len(K_range)
+    # Define the number of UEs
+    K = 4
 
     ##################################################
     # Simulation
     ##################################################
 
     # Prepare to save results
-    avg_nmse = np.zeros((n_yaxis, n_setups, n_channels, n_noise))
-
-    avg_se = np.zeros((2, n_yaxis, n_setups, n_channels, n_noise))
-
-    avg_num = np.zeros((2, n_yaxis, n_setups, n_channels, n_noise))
-    avg_den1 = np.zeros((2, n_yaxis, n_setups, n_channels, n_noise))
-    avg_den2 = np.zeros((2, n_yaxis, n_setups, n_channels, n_noise))
-
-    avg_sir = np.zeros((2, n_yaxis, n_setups, n_channels, n_noise))
+    avg_nmse = np.zeros((n_setups, n_noise, n_channels, K))
+    avg_se = np.zeros((2, n_setups, n_noise, n_channels, K))
+    avg_se_pos = np.zeros((2, n_setups, n_noise, n_channels, K))
 
     avg_nmse[:] = np.nan
-
     avg_se[:] = np.nan
-
-    avg_num[:] = np.nan
-    avg_den1[:] = np.nan
-    avg_den2[:] = np.nan
-
-    avg_sir[:] = np.nan
+    avg_se_pos[:] = np.nan
 
     # Go through all setups
     for ss in tqdm(range(n_setups)):
 
-        # Go through all number of UEs
-        for kk, K in enumerate(K_range):
+        K = int(K)
 
-            K = int(K)
+        # Number of pilots
+        n_pilots = K
 
-            # Number of pilots
-            n_pilots = K
+        # Number of pilot subblocks
+        n_pilot_subblocks = int(64 // K)
 
-            # Number of pilot subblocks
-            n_pilot_subblocks = int(64 // K)
+        # Calculate pre-log term
+        pre_log_term = (tau_c - n_pilot_subblocks * n_pilots) / tau_c
 
-            # Calculate pre-log term
-            pre_log_term = (tau_c - n_pilot_subblocks * n_pilots) / tau_c
+        # Drop the UEs over the area of interest
+        pos_ues = drop_ues(K, pos_ris, dmax=1000, guard_distance_ris=900)
 
-            # Drop the UEs over the area of interest
-            pos_ues = drop_ues(K, pos_ris, dmax=distance_max, guard_distance_ris=guard_distance_ris)
+        # Generate UE channels
+        bs_ue_channels, _ = generate_channel_realizations(wavelength, pos_bs, pos_bs_els, pos_ris,
+                                                                        pos_ris_els, pos_ues, sigma2_dr, sigma2_rr,
+                                                                        n_channels)
+        # Go through noise realizations
+        for nn in range(n_noise):
 
-            # Compute LoS components of UE related channels
-            bs_ue_steering = array_steering_vector(wavelength, pos_ues, pos_bs, pos_bs_els)
-            bs_ue_pathloss = pathloss(3.76, pos_bs, pos_ues)
+            # Generate estimation noise
+            noise = np.random.randn(M, n_channels, K) + 1j * np.random.randn(M, n_channels, K)
+            noise *= np.sqrt(sigma2_n / 2 / n_pilot_subblocks / P_ue / n_pilots)
 
-            los_bs_ue_channels = np.sqrt(bs_ue_pathloss)[:, None] * bs_ue_steering
+            # Get equivalent channel estimates
+            hat_bs_ue_channels = bs_ue_channels + noise
 
-            # Generate fading channels
-            bs_ue_channels = np.sqrt(sigma2_dr / 2) * (np.random.randn(n_channels) + 1j * np.random.randn(n_channels))
-            bs_ue_channels = los_bs_ue_channels[:, :, None] + bs_ue_channels[None, None, :]
+            # Compute normalized mean squared error
+            diff = hat_bs_ue_channels - bs_ue_channels
+            avg_nmse[ss, nn, :, :] = (np.linalg.norm(diff, axis=0) ** 2 / np.linalg.norm(bs_ue_channels, axis=0))
 
-            # Go through noise realizations
-            for nn in range(n_noise):
+            # Communication phase with MR
+            se, _, _, _ = bs_comm(P_ue, sigma2_n, bs_ue_channels, hat_bs_ue_channels, method='MR')
 
-                # Generate estimation noise
-                noise = np.random.randn(K, M, n_channels) + 1j * np.random.randn(K, M, n_channels)
-                noise *= np.sqrt(sigma2_n / 2 / n_pilot_subblocks / P_ue / n_pilots)
+            # Store results
+            avg_se[0, ss, :, nn] = se
+            avg_se_pos[0, ss, :, nn] = pre_log_term * se
 
-                # Get equivalent channel estimates
-                hat_bs_ue_channels = bs_ue_channels + noise
+            # Communication phase with ZF
+            se, _, _, _ = bs_comm(P_ue, sigma2_n, bs_ue_channels, hat_bs_ue_channels, method='ZF')
 
-                # Compute normalized mean squared error
-                diff = hat_bs_ue_channels - bs_ue_channels
-                avg_nmse[kk, ss, :, nn] = (np.linalg.norm(diff, axis=1) ** 2 / np.linalg.norm(bs_ue_channels, axis=1)).mean(axis=0)
+            # Store results
+            avg_se[1, ss, :, nn] = se
+            avg_se_pos[1, ss, :, nn] = pre_log_term * se
 
-                # Communication phase with MR
-                se, num, den1, den2 = bs_comm(P_ue, sigma2_n, bs_ue_channels, hat_bs_ue_channels, method='MR')
-
-                # Store results
-                avg_se[0, kk, ss, :, nn] = pre_log_term * se.sum(axis=0)
-
-                avg_num[0, kk, ss, :, nn] = num.mean(axis=0)
-                avg_den1[0, kk, ss, :, nn] = den1.mean(axis=0)
-                avg_den2[0, kk, ss, :, nn] = den2.mean(axis=0)
-
-                avg_sir[0, kk, ss, :, nn] = (num/den1).mean(axis=0)
-
-                # Communication phase with ZF
-                se, num, den1, den2 = bs_comm(P_ue, sigma2_n, bs_ue_channels, hat_bs_ue_channels, method='ZF')
-
-                # Store results
-                avg_se[1, ss, :, nn] = pre_log_term * se.sum(axis=0)
-
-                avg_num[1, kk, ss, :, nn] = num.mean(axis=0)
-                avg_den1[1, kk, ss, :, nn] = den1.mean(axis=0)
-                avg_den2[1, kk, ss, :, nn] = den2.mean(axis=0)
-
-                avg_sir[1, kk, ss, :, nn] = (num / den1).mean(axis=0)
-
-    np.savez('data/figure7_mmimo_K' + str(K) + '.npz',
-             K_range=K_range,
+    np.savez('data/figure7_mmimo_K' + str(K) + 'f6.npz',
              avg_nmse=avg_nmse,
              avg_se=avg_se,
-             avg_num=avg_num,
-             avg_den1=avg_den1,
-             avg_den2=avg_den2,
-             avg_sir=avg_sir
+             avg_se_pos=avg_se_pos
              )

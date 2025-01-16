@@ -33,7 +33,7 @@ def scenario(wavelength, M, N):
     guard_distance_bs = 2 / wavelength * (2 * pos_bs_els[-1].imag) ** 2
 
     # Coordinates of the BS
-    pos_bs = 0 + 1000j
+    pos_bs = 1000 * (- np.cos(np.pi/2) + 1j * np.sin(np.pi/2))
 
     # Convert to vector form
     pos_bs = np.array([pos_bs.real, pos_bs.imag])
@@ -43,7 +43,7 @@ def scenario(wavelength, M, N):
     # Array steering vectors
     bs_ris_steering = array_steering_vector(wavelength, pos_ris, pos_bs, pos_bs_els)
     ris_bs_steering = array_steering_vector(wavelength, pos_bs, pos_ris, pos_ris_els)
-
+     
     # BS-HRIS pathloss
     bs_ris_pathloss = pathloss(2, pos_bs, pos_ris)
 
@@ -65,7 +65,7 @@ def drop_ues(K, pos_ris, dmax, dmin=None, guard_distance_ris=0.0):
     distances = np.sqrt(np.random.rand(K) * (dmax**2 - dmin**2) + dmin**2)
 
     # Generate angles
-    angles = np.pi * np.random.rand(K)
+    angles = np.pi/2 * np.random.rand(K)
 
     # Conversion to vector form
     pos_ues = distances[:, None] * np.array([np.cos(angles), np.sin(angles)]).T
@@ -97,13 +97,58 @@ def generate_channel_realizations(wavelength, pos_bs, pos_bs_els, pos_ris, pos_r
     ris_ue_pathloss = pathloss(2, pos_ris, pos_ues)
 
     los_ris_ue_channels = np.sqrt(ris_ue_pathloss)[:, None] * ris_ue_steering
-
+    
     # Generate realizations
-    bs_ue_channels = los_bs_ue_channels[:, :, None] + np.sqrt(sigma2_dr/2) * (np.random.randn(n_channels) + 1j * np.random.randn(n_channels))
-    ris_ue_channels = los_ris_ue_channels[:, :, None] + np.sqrt(sigma2_rr/2) * (np.random.randn(n_channels) + 1j * np.random.randn(n_channels))
+    random_ = np.sqrt(sigma2_dr/2) *  (np.random.randn(n_channels) + 1j * np.random.randn(n_channels))
+    bs_ue_channels = los_bs_ue_channels[:, :, None] + random_[None, None, :]
+
+    random_ = np.sqrt(sigma2_rr/2) * (np.random.randn(n_channels) + 1j * np.random.randn(n_channels))
+    ris_ue_channels = los_ris_ue_channels[:, :, None] + random_[None, None, :]
+
+    bs_ue_channels = bs_ue_channels.transpose((1, 2, 0))
+    ris_ue_channels = ris_ue_channels.transpose((1, 2, 0))
+
+    return bs_ue_channels, ris_ue_channels
+
+def generate_channel_realizations2(wavelength, pos_bs, pos_bs_els, pos_ris, pos_ris_els, pos_ues, sigma2_dr, sigma2_rr, n_channels):
+    """
+
+    :param wavelength:
+    :param pathloss_exp:
+    :param pos_bs:
+    :param pos_bs_els:
+    :param pos_ris:
+    :param pos_ris_els:
+    :param pos_ues:
+    :return:
+    """
+
+    # BS-UE channels
+    bs_ue_steering = array_steering_vector(wavelength, pos_ues, pos_bs, pos_bs_els)
+    bs_ue_pathloss = pathloss(3.76, pos_bs, pos_ues)
+
+    los_bs_ue_channels = np.sqrt(bs_ue_pathloss)[:, None] * bs_ue_steering
+
+    # RIS-UE channels
+    ris_ue_steering = array_steering_vector(wavelength, pos_ues, pos_ris, pos_ris_els)
+    ris_ue_pathloss = pathloss(2, pos_ris, pos_ues)
+
+    los_ris_ue_channels = np.sqrt(ris_ue_pathloss)[:, None] * ris_ue_steering
+    
+    # Generate realizations
+    random_ = np.sqrt(sigma2_dr/2) *  (np.random.randn(n_channels) + 1j * np.random.randn(n_channels))
+    bs_ue_channels = los_bs_ue_channels[:, :, None] + random_[None, None, :]
+
+    random_ = np.sqrt(sigma2_rr/2) * (np.random.randn(n_channels) + 1j * np.random.randn(n_channels))
+    ris_ue_channels = los_ris_ue_channels[:, :, None] + random_[None, None, :]
+
+    los_bs_ue_channels = los_bs_ue_channels.transpose((1, 0))
+    los_ris_ue_channels = los_ris_ue_channels.transpose((1, 0))
+
+    bs_ue_channels = bs_ue_channels.transpose((1, 2, 0))
+    ris_ue_channels = ris_ue_channels.transpose((1, 2, 0))
 
     return bs_ue_channels, los_bs_ue_channels, ris_ue_channels, los_ris_ue_channels
-
 
 def array_steering_vector(wavelength, pos1, pos2, pos_els):
     """
@@ -123,8 +168,8 @@ def array_steering_vector(wavelength, pos1, pos2, pos_els):
     else:
         wave_vector = (2 * np.pi / wavelength) * (pos1 - pos2) / np.linalg.norm(pos2 - pos1, axis=1)[:, None]
         angles = wave_vector[:, None, :] * (pos_els - pos2)
-        angles = angles.sum(axis=-1)
-
+        angles = angles.sum(axis=-1 )
+    
     # Compute steering vector
     steering = np.exp(1j * angles)
 

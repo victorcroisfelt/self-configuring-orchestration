@@ -5,18 +5,18 @@ from matplotlib import rc
 
 from scipy.interpolate import CubicSpline
 
-import tikzplotlib
+#import tikzplotlib
 
 rc('font', **{'family': 'sans serif', 'serif': ['Computer Modern']})
 rc('text', usetex=True)
 
 # Load data
-data = np.load('data/mmimo_K4.npz')
+data = np.load('data/figure7_mmimo_K4.npz')
 
 gen_data = np.load('data/figure7_gen-ris_K4_N32.npz')
 pow_data = np.load('data/figure7_pow-ris_K4_N32.npz')
 sig_data = np.load('data/figure7_sig-ris_K4_N32.npz')
-
+breakpoint()
 # Extract relevant infomation
 relative_probe_time = pow_data['relative_probe_time']
 
@@ -60,7 +60,7 @@ ax.grid(color='#E9E9E9', linestyle=':', linewidth=1.0, alpha=0.5)
 
 ax.set_xticks([0, 0.2, 0.4, 0.6, 0.8, 1])
 
-tikzplotlib.save("tikz/figure7b.tex")
+#tikzplotlib.save("tikz/figure7b.tex")
 
 plt.tight_layout()
 
