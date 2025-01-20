@@ -4,7 +4,7 @@ from scipy.constants import speed_of_light
 from tqdm import tqdm
 
 from src.channel import generate_channel_realizations, scenario, drop_ues
-from src.ris import pow_ris_config_codebook, ris_rx_chest_with_choice, gen_ris_probe, pow_ris_probe, sig_ris_probe
+from src.ris import pow_ris_config_codebook, ris_rx_chest_with_choice
 
 from scipy.stats.distributions import chi2
 
@@ -47,9 +47,6 @@ if __name__ == '__main__':
     # Number of pilots
     n_pilots = K
 
-    # Size of the coherence block
-    size_coherence_block = 128
-
     # Number of pilot subblocks
     n_pilot_subblocks = 16
 
@@ -67,7 +64,7 @@ if __name__ == '__main__':
 
     # Noise power
     sigma2_n_bs = 10 ** ((-94 - 30) / 10)
-    sigma2_n_ris = 10 ** ((-91 - 30) / 10)
+    sigma2_n_hris = 10 ** ((-91 - 30) / 10)
 
     # Generate scenario
     pos_bs, pos_bs_els, pos_ris, pos_ris_els, bs_ris_channels, ris_bs_steering, guard_distance_ris = scenario(wavelength, M, N)
@@ -94,7 +91,7 @@ if __name__ == '__main__':
     n_etas = len(eta_range)
 
     # Define probability of false alarm
-    proba_false_alarm_range = np.array([0.01, 0.001])
+    proba_false_alarm_range = np.array([0.1, 0.01, 0.001, 0.0001])
     n_probas = len(proba_false_alarm_range)
 
     ##################################################
@@ -102,8 +99,8 @@ if __name__ == '__main__':
     ##################################################
 
     # Prepare to save simulation results
-    pow_test = np.zeros((n_etas, n_probe, n_noise, n_channels, n_setups))
-    sig_test = np.zeros((n_etas, n_probe, n_noise, n_channels, n_setups))
+    pow_proba_detection = np.zeros((n_probe, n_etas, n_probas))
+    sig_proba_detection = np.zeros((n_probe, n_etas, n_probas))
 
     # Drop the UEs over the area of interest
     pos_ues = drop_ues(n_setups, pos_ris, dmax=1000, guard_distance_ris=900)
@@ -141,110 +138,71 @@ if __name__ == '__main__':
             for nn in range(n_noise):
 
                 # Compute received pilot signals
-                pow_ris_rx_chest = ris_rx_chest_with_choice(eta, P_ue, n_pilots, sigma2_n_ris, n_pilot_subblocks_probe, ris_ue_channels, mask, pow_probe_configs)
-                sig_ris_rx_chest = ris_rx_chest_with_choice(eta, P_ue, n_pilots, sigma2_n_ris, n_pilot_subblocks_probe, ris_ue_channels, mask)
-                
-                # Power-based HRIS probe
-                pow_test_curr = np.abs(pow_ris_rx_chest) ** 2
-                pow_test_curr = np.max(pow_test_curr, axis=0)
+                pow_ris_rx_chest = ris_rx_chest_with_choice(eta, P_ue, n_pilots, sigma2_n_hris, n_pilot_subblocks_probe, ris_ue_channels, mask, pow_probe_configs)
+                sig_ris_rx_chest = ris_rx_chest_with_choice(eta, P_ue, n_pilots, sigma2_n_hris, n_pilot_subblocks_probe, ris_ue_channels, mask)
 
-                pow_test[ee, cc, nn, :, :] = pow_test_curr
+                #
+                # PD-based HRIS probe
+                #
 
-                # Signal-based HRIS probe
+                # Compute measured power
+                pow_test = np.abs(pow_ris_rx_chest)**2
+                pow_test = pow_test.max(axis=0)
+
+                #
+                # DSP-based HRIS probe
+                #
+
+                # Average signal over probe subblocks
                 avg_subblocks = np.mean(sig_ris_rx_chest, axis=0)
-                avg_antennas = np.mean(avg_subblocks, axis=0)
-                sig_test_curr = np.abs(avg_antennas) ** 2
-                sig_test_curr /= ((n_pilots * sigma2_n_ris) / (2 * N * n_pilot_subblocks_probe))
 
-                sig_test[ee, cc, nn, :, :] = sig_test_curr
+                # Compute test 
+                ynorms = np.linalg.norm(avg_subblocks, axis=0)
+                sig_test = 2 * N * n_pilot_subblocks_probe / n_pilots / sigma2_n_hris * ynorms**2
 
-    print('time to test')
+                # Go through all false alarm probabilities
+                for pp in range(n_probas):
 
-    #
-    # Perform test
-    #
+                    # Get current value of eta
+                    proba_false_alarm = proba_false_alarm_range[pp]
 
-    pow_threshold = np.zeros((n_probas))
-    sig_threshold = np.zeros((n_probas))
+                    #
+                    # PD-based HRIS probe
+                    #
 
-    # Prepare to save test results
-    pow_detection = np.zeros((n_probas, n_etas, n_probe, n_noise, n_channels))
-    sig_detection = np.zeros((n_probas, n_etas, n_probe, n_noise, n_channels))
+                    # Compute threshold
+                    pow_threshold = - (2 * N * sigma2_n_hris) * np.log(proba_false_alarm)
 
-    # Prepare to save results
-    pow_nmse = np.zeros((n_probas, n_etas, n_probe, n_noise, n_channels))
-    sig_nmse = np.zeros((n_probas, n_etas, n_probe, n_noise, n_channels))
-    
-    pow_nmse[:] = np.nan
-    sig_nmse[:] = np.nan
+                    # Perform test
+                    pow_detected_ues = pow_test > pow_threshold
 
-    # Genie reflection configuration
-    gen_reflection_configs, gen_weights = gen_ris_probe(ris_ue_channels)
+                    # Estimate probability of detection
+                    pow_proba_detection_curr = ue_choice == pow_detected_ues
 
-    # Go through all possible values for C
-    for cc, n_pilot_subblocks_probe in tqdm(enumerate(n_pilot_subblocks_probe_range), total=n_pilot_subblocks):
+                    # Store results
+                    pow_proba_detection[cc, ee, pp] += np.mean(pow_proba_detection_curr)
 
-        # Generate power-RIS configuration codebook
-        pow_probe_configs = pow_ris_config_codebook(wavelength, n_pilot_subblocks_probe, pos_ris, pos_ris_els)
+                    #
+                    # DSP-based HRIS probe
+                    #
 
-        # Go through all false alarm probabilities
-        for pp in range(n_probas):
+                    # Get threshold value
+                    sig_threshold = chi2.ppf(1 - proba_false_alarm, df=2*N)
 
-            # Get current probability of false alarm
-            proba_false_alarm = proba_false_alarm_range[pp]
+                    # Perform test
+                    sig_detected_ues = sig_test > sig_threshold
 
-            # Get threshold values
-            pow_threshold[pp] = - (2 * N * sigma2_n_ris) * np.log(proba_false_alarm)
-            sig_threshold[pp] = chi2.ppf(1 - proba_false_alarm, df=4)
+                    # Estimate probability of detection
+                    sig_proba_detection_curr = ue_choice == sig_detected_ues
 
-            # Go through all values of eta
-            for ee in range(n_etas):
+                    # Store results
+                    sig_proba_detection[cc, ee, pp] += np.mean(sig_proba_detection_curr)
 
-                # Go through the channels
-                for ch in range(n_channels):
-
-                    # Go through noise realizations
-                    for nn in range(n_noise):
-
-                        # Perform test
-                        pow_mask = pow_test[ee, cc, nn, ch, :] > pow_threshold[pp]
-                        sig_mask = sig_test[ee, cc, nn, ch, :] > sig_threshold[pp]
-    
-                        pow_detection[pp, ee, cc, nn, ch] = np.mean(pow_mask == mask)
-                        sig_detection[pp, ee, cc, nn, ch] = np.mean(sig_mask == mask)
-
-                        #####
-                        pow_ris_rx_chest = ris_rx_chest_with_choice(eta, P_ue, n_pilots, sigma2_n_ris, n_pilot_subblocks_probe, ris_ue_channels, pow_mask, pow_probe_configs)
-                        sig_ris_rx_chest = ris_rx_chest_with_choice(eta, P_ue, n_pilots, sigma2_n_ris, n_pilot_subblocks_probe, ris_ue_channels, sig_mask)
-
-                        #####
-                        pow_reflection_configs, pow_weights, pow_hat_aoa, pow_pd_ = pow_ris_probe(N, sigma2_n_ris, proba_false_alarm, pow_ris_rx_chest, pow_probe_configs)
-                        sig_reflection_configs, sig_weights, sig_hat_aoa, sig_pd_ = sig_ris_probe(n_pilots, sigma2_n_ris, proba_false_alarm, sig_ris_rx_chest)
-
-                        # Evaluate reflection configs
-                        pow_nmse = np.linalg.norm(pow_reflection_configs - gen_reflection_configs,
-                                                axis=0) ** 2 / np.linalg.norm(gen_reflection_configs, axis=0) ** 2
-
-                        sig_nmse = np.linalg.norm(sig_reflection_configs - gen_reflection_configs,
-                                                axis=0) ** 2 / np.linalg.norm(gen_reflection_configs, axis=0) ** 2
-
-    np.savez('data/new_figure6a_xx.npz',
-             pow_test=pow_test,
-             sig_test=sig_test,
-             pow_threshold=pow_threshold,
-             sig_threshold=sig_threshold,
-             pow_detection=pow_detection,
-             sig_detection=sig_detection,
-             pow_nmse=pow_nmse,
-             sig_nmse=sig_nmse
-             )
-
-#     # Store values
-#     pow_pd[pp, ee, cc, ss, nn] = pow_pd_
-#     sig_pd[pp, ee, cc, ss, nn] = sig_pd_
-# # Store
-# pow_nmse1[cc, ss, nn] = np.nanmean(pow_nmse_1)
-# sig_nmse1[cc, ss, nn] = np.nanmean(sig_nmse_1)
-
-# pow_nmse2[cc, ss, nn] = np.nanmean(pow_nmse_2)
-# sig_nmse2[cc, ss, nn] = np.nanmean(sig_nmse_2)
+    np.savez('data/figure7.npz',
+        n_pilot_subblocks=n_pilot_subblocks,
+        n_pilot_subblocks_probe_range=n_pilot_subblocks_probe_range,
+        eta_range=eta_range,
+        proba_false_alarm_range=proba_false_alarm_range,
+        pow_proba_detection=pow_proba_detection,
+        sig_proba_detection=sig_proba_detection
+    )

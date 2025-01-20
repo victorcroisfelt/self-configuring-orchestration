@@ -2,16 +2,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from matplotlib import rc
-
-#import tikzplotlib
-
 rc('font', **{'family': 'sans serif', 'serif': ['Computer Modern']})
 rc('text', usetex=True)
 
 # Load data
-data = np.load('data/figure6a.npz')
+data = np.load('data/figure7.npz')
 
-n_pilot_subblocks_probe_range = data['n_pilot_subblocks_probe_range'] / 16
+n_pilot_subblocks_probe = data['n_pilot_subblocks_probe'] 
+n_pilot_subblocks_probe_range = data['n_pilot_subblocks_probe_range'] / n_pilot_subblocks_probe
 eta_range = data['eta_range']
 proba_false_alarm_range = data['proba_false_alarm_range']
 
@@ -69,7 +67,5 @@ ax.grid(color='#E9E9E9', linestyle=':', linewidth=1.0, alpha=0.5)
 ax.legend(framealpha=0.5)
 
 plt.tight_layout()
-
-#tikzplotlib.save("tikz/figure6a.tex")
 
 plt.show()

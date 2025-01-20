@@ -3,7 +3,7 @@ from scipy.constants import speed_of_light
 
 import matplotlib.pyplot as plt
 
-from src.channel import scenario, generate_channel_realizations2
+from src.channel import scenario, generate_los_channel_realizations
 from src.ris import pow_ris_config_codebook, ris_rx_chest, gen_ris_probe, pow_ris_probe, sig_ris_probe
 
 # Press the green button in the gutter to run the script.
@@ -13,11 +13,15 @@ if __name__ == '__main__':
     np.random.seed(42)
 
     ##################################################
-    # HRIS Parameters
+    # BS Parameters
     ##################################################
 
     # Number of BS antennas
     M = 64
+
+    ##################################################
+    # HRIS Parameters
+    ##################################################
 
     # Number of RIS elements
     N = 32
@@ -56,10 +60,6 @@ if __name__ == '__main__':
     freq = 28 * 10 ** 9
     wavelength = speed_of_light / freq
 
-    # NLoS variances
-    sigma2_dr = 0.1 * 9.07 * 1e-9
-    sigma2_rr = 0.1 * 1.12 * 1e-6
-
     # Noise power
     sigma2_n_bs = 10 ** ((-94 - 30) / 10)
     sigma2_n_ris = 10 ** ((-91 - 30) / 10)
@@ -87,8 +87,7 @@ if __name__ == '__main__':
     pos_ues = distance_ues[:, None] * np.array([np.cos(angles_ues), np.sin(angles_ues)]).T
 
     # Generate UE channel realizations
-    bs_ue_channels, los_bs_ue_channels, ris_ue_channels, los_ris_ue_channels = generate_channel_realizations2(
-        wavelength, pos_bs, pos_bs_els, pos_ris, pos_ris_els, pos_ues, sigma2_dr, sigma2_rr, 1)
+    los_bs_ue_channels, los_ris_ue_channels = generate_los_channel_realizations(wavelength, pos_bs, pos_bs_els, pos_ris, pos_ris_els, pos_ues)
 
     # Generate PD-enabled HRIS configuration codebook
     pow_probe_configs = pow_ris_config_codebook(wavelength, n_probe_pilot_subblocks, pos_ris, pos_ris_els)
@@ -103,8 +102,8 @@ if __name__ == '__main__':
 
     # HRIS probe
     gen_reflection_configs, gen_weights = gen_ris_probe(los_ris_ue_channels[:, :, None])
-    pow_reflection_configs, pow_weights, pow_hat_aoa, pow_pd = pow_ris_probe(N, sigma2_n_ris, proba_false_alarm, pow_ris_rx_chest, pow_probe_configs)
-    sig_reflection_configs, sig_weights, sig_hat_aoa, sig_pd = sig_ris_probe(n_pilots, sigma2_n_ris, proba_false_alarm, sig_ris_rx_chest)
+    pow_reflection_configs, pow_weights, pow_hat_aoa = pow_ris_probe(N, sigma2_n_ris, proba_false_alarm, pow_ris_rx_chest, pow_probe_configs)
+    sig_reflection_configs, sig_weights, sig_hat_aoa = sig_ris_probe(n_pilots, sigma2_n_ris, proba_false_alarm, sig_ris_rx_chest)
 
     # Complete reflection configurations by inserting BS-RIS knowledge
     gen_reflection_configs *= ris_bs_steering[:, None]
@@ -126,7 +125,7 @@ if __name__ == '__main__':
     # Compute equivalent channels during probe
     pow_eq_channels_probe = los_bs_ue_channels[None, :, :] + np.sqrt(eta) * pow_refl_channels_probe
     sig_eq_channels_probe = los_bs_ue_channels[None, :, :] + np.sqrt(eta) * sig_refl_channels_probe
-
+  
     # Compute reflected channels during communication
     gen_refl_channels = gen_reflection_configs[:, :] * los_ris_ue_channels 
     gen_refl_channels = bs_ris_channels[:, :, None] * gen_refl_channels[None, :, :]

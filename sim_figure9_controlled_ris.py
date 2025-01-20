@@ -38,18 +38,11 @@ if __name__ == '__main__':
     P_ue = 10 ** ((0 - 30) / 10)
 
     ##################################################
-    # System Parameters
-    ##################################################
-
-    # Coherence interval length
-    tau_c = 128
-
-    ##################################################
     # Scenario Parameters
     ##################################################
 
     # Physical parameters
-    freq = 6 * 10 ** 9
+    freq = 28 * 10 ** 9
     wavelength = speed_of_light / freq
 
     # NLoS variances
@@ -62,9 +55,6 @@ if __name__ == '__main__':
 
     # Generate scenario
     pos_bs, pos_bs_els, pos_ris, pos_ris_els, bs_ris_channels, ris_bs_steering, guard_distance_ris = scenario(wavelength, M, N)
-
-    # Maximum distance
-    distance_max = 100
 
     ##################################################
     # Simulation Parameters
@@ -79,23 +69,8 @@ if __name__ == '__main__':
     # Define number of noise realizations
     n_noise = 100
 
-    # # Define probability of false alarm
-    # proba_false_alarm = 0.01
-
-    # # HRIS reflection parameter
-    # eta = 0.9999
-
     # Number of pilots
     n_pilots = K
-
-    # # Number of pilot subblocks
-    # n_pilot_subblocks = int(64 // K)
-
-    # # Number of probe pilot subbblocks
-    # n_pilot_subblocks_probe_range = np.arange(1, n_pilot_subblocks + 1)
-
-    # Calculate pre-log term
-    #pre_log_term = (tau_c - n_pilot_subblocks * n_pilots) / tau_c
 
     ##################################################
     # Simulation
@@ -130,9 +105,6 @@ if __name__ == '__main__':
             # Compute equivalent channels during communication
             gen_eq_channels = bs_ue_channels + gen_refl_channels
 
-            # Get channel estimates
-            #gen_hat_eq_channels = bs_rx_chest_no_probe(P_ue, n_pilots, sigma2_n_bs, n_pilot_subblocks, n_pilot_subblocks_probe, gen_eq_channels)
-
             ##################################################
             # Communication Phase
             ##################################################
@@ -141,18 +113,6 @@ if __name__ == '__main__':
             # Store results
             avg_se[0, ss, nn, :, :] = gen_se
 
-    np.savez('data/figure7_control-ris_K' + str(K) + '_N' + str(N) + 'f6.npz',
-             avg_se=avg_se
-             )
-
-    # np.savez('data/figure7_pow-ris_K' + str(K) + '_N' + str(N) + '.npz',
-    #          pow_avg_nmse=pow_avg_nmse,
-    #          pow_avg_se=pow_avg_se,
-    #          pow_avg_se_pos=pow_avg_se_pos
-    #          )
-
-    # np.savez('data/figure7_sig-ris_K' + str(K) + '_N' + str(N) + '.npz',
-    #          sig_avg_nmse=sig_avg_nmse,
-    #          sig_avg_se=sig_avg_se,
-    #          sig_avg_se_pos=sig_avg_se_pos
-    #          )
+    np.savez('data/figure9_controlled-ris_K' + str(K) + '_N' + str(N) + '.npz',
+            avg_se=avg_se
+            )

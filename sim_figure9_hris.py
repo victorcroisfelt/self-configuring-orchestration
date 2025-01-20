@@ -42,7 +42,7 @@ if __name__ == '__main__':
     ##################################################
 
     # Coherence interval length
-    tau_c = 128
+    coherence_interval_length = 128
 
     ##################################################
     # Scenario Parameters
@@ -62,9 +62,6 @@ if __name__ == '__main__':
 
     # Generate scenario
     pos_bs, pos_bs_els, pos_ris, pos_ris_els, bs_ris_channels, ris_bs_steering, guard_distance_ris = scenario(wavelength, M, N)
-
-    # Maximum distance
-    distance_max = 100
 
     ##################################################
     # Simulation Parameters
@@ -95,7 +92,7 @@ if __name__ == '__main__':
     n_pilot_subblocks_probe_range = np.arange(1, n_pilot_subblocks + 1)
 
     # Calculate pre-log term
-    pre_log_term = (tau_c - n_pilot_subblocks * n_pilots) / tau_c
+    pre_log_term = (coherence_interval_length - n_pilot_subblocks * n_pilots) / coherence_interval_length
 
     ##################################################
     # Simulation
@@ -141,6 +138,9 @@ if __name__ == '__main__':
 
         # Go through all points in the x-dimension
         for cc, n_pilot_subblocks_probe in enumerate(n_pilot_subblocks_probe_range):
+            
+            if n_pilot_subblocks_probe == n_pilot_subblocks:
+                break
 
             # Generate power-RIS configuration codebook
             pow_probe_configs = pow_ris_config_codebook(wavelength, n_pilot_subblocks_probe, pos_ris, pos_ris_els)
@@ -151,10 +151,10 @@ if __name__ == '__main__':
                 # Compute received pilot signals
                 pow_ris_rx_chest = ris_rx_chest(eta, P_ue, n_pilots, sigma2_n_ris, n_pilot_subblocks_probe, ris_ue_channels, pow_probe_configs)
                 sig_ris_rx_chest = ris_rx_chest(eta, P_ue, n_pilots, sigma2_n_ris, n_pilot_subblocks_probe, ris_ue_channels)
-                #breakpoint()
+
                 # HRIS probe
-                pow_reflection_configs, pow_weights, pow_hat_aoa, _ = pow_ris_probe(N, sigma2_n_ris, proba_false_alarm, pow_ris_rx_chest, pow_probe_configs)
-                sig_reflection_configs, sig_weights, sig_hat_aoa, _ = sig_ris_probe(n_pilots, sigma2_n_ris, proba_false_alarm, sig_ris_rx_chest)
+                pow_reflection_configs, pow_weights, pow_hat_aoa = pow_ris_probe(N, sigma2_n_ris, proba_false_alarm, pow_ris_rx_chest, pow_probe_configs)
+                sig_reflection_configs, sig_weights, sig_hat_aoa = sig_ris_probe(n_pilots, sigma2_n_ris, proba_false_alarm, sig_ris_rx_chest)
 
                 # Complete reflection configurations by inserting BS-RIS knowledge
                 gen_reflection_configs *= ris_bs_steering[:, None]
@@ -225,7 +225,7 @@ if __name__ == '__main__':
                 pow_se, _, _, _ = bs_comm(P_ue, sigma2_n_bs, pow_eq_channels, pow_hat_eq_channels)
                 sig_se, _, _, _ = bs_comm(P_ue, sigma2_n_bs, sig_eq_channels, sig_hat_eq_channels)
 
-                # Store results
+                # Store results for MR
                 gen_avg_se[0, cc, ss, nn, :, :] = gen_se
                 pow_avg_se[0, cc, ss, nn, :, :] = pow_se
                 sig_avg_se[0, cc, ss, nn, :, :] = sig_se
@@ -234,27 +234,11 @@ if __name__ == '__main__':
                 pow_avg_se_pos[0, cc, ss, nn, :, :] = pre_log_term * pow_se
                 sig_avg_se_pos[0, cc, ss, nn, :, :] = pre_log_term * sig_se
 
-                # gen_avg_num[0, cc, ss, nn, :, :] = gen_num.mean(axis=0)
-                # pow_avg_num[0, cc, ss, nn, :, :] = pow_num.mean(axis=0)
-                # sig_avg_num[0, cc, ss, nn, :, :] = sig_num.mean(axis=0)
-                #
-                # gen_avg_den1[0, cc, ss, nn, :, :] = gen_den1.mean(axis=0)
-                # pow_avg_den1[0, cc, ss, nn, :, :] = pow_den1.mean(axis=0)
-                # sig_avg_den1[0, cc, ss, nn, :, :] = sig_den1.mean(axis=0)
-                #
-                # gen_avg_den2[0, cc, ss, nn, :, :] = gen_den2.mean(axis=0)
-                # pow_avg_den2[0, cc, ss, nn, :, :] = pow_den2.mean(axis=0)
-                # sig_avg_den2[0, cc, ss, nn, :, :] = sig_den2.mean(axis=0)
-                #
-                # gen_avg_sir[0, cc, ss, nn, :, :] = (gen_num / gen_den1).mean(axis=0)
-                # pow_avg_sir[0, cc, ss, nn, :, :] = (pow_num / pow_den1).mean(axis=0)
-                # sig_avg_sir[0, cc, ss, nn, :, :] = (sig_num / sig_den1).mean(axis=0)
-
                 gen_se, _, _, _ = bs_comm(P_ue, sigma2_n_bs, gen_eq_channels, gen_hat_eq_channels, method='ZF')
                 pow_se, _, _, _ = bs_comm(P_ue, sigma2_n_bs, pow_eq_channels, pow_hat_eq_channels, method='ZF')
                 sig_se, _, _, _ = bs_comm(P_ue, sigma2_n_bs, sig_eq_channels, sig_hat_eq_channels, method='ZF')
 
-                # Store results
+                # Store results for ZF
                 gen_avg_se[1, cc, ss, nn, :, :] = gen_se
                 pow_avg_se[1, cc, ss, nn, :, :] = pow_se
                 sig_avg_se[1, cc, ss, nn, :, :] = sig_se
@@ -263,36 +247,26 @@ if __name__ == '__main__':
                 pow_avg_se_pos[1, cc, ss, nn, :, :] = pre_log_term * pow_se
                 sig_avg_se_pos[1, cc, ss, nn, :, :] = pre_log_term * sig_se
 
-                # gen_avg_num[1, kk, cc, ss, :, nn] = gen_num.mean(axis=0)
-                # pow_avg_num[1, kk, cc, ss, :, nn] = pow_num.mean(axis=0)
-                # sig_avg_num[1, kk, cc, ss, :, nn] = sig_num.mean(axis=0)
-                #
-                # gen_avg_den1[1, kk, cc, ss, :, nn] = gen_den1.mean(axis=0)
-                # pow_avg_den1[1, kk, cc, ss, :, nn] = pow_den1.mean(axis=0)
-                # sig_avg_den1[1, kk, cc, ss, :, nn] = sig_den1.mean(axis=0)
-                #
-                # gen_avg_den2[1, kk, cc, ss, :, nn] = gen_den2.mean(axis=0)
-                # pow_avg_den2[1, kk, cc, ss, :, nn] = pow_den2.mean(axis=0)
-                # sig_avg_den2[1, kk, cc, ss, :, nn] = sig_den2.mean(axis=0)
-                #
-                # gen_avg_sir[1, kk, cc, ss, :, nn] = (gen_num / gen_den1).mean(axis=0)
-                # pow_avg_sir[1, kk, cc, ss, :, nn] = (pow_num / pow_den1).mean(axis=0)
-                # sig_avg_sir[1, kk, cc, ss, :, nn] = (sig_num / sig_den1).mean(axis=0)
+    np.savez('data/figure9_gen-ris_K' + str(K) + '_N' + str(N) + '.npz',
+            n_pilot_subblocks=n_pilot_subblocks, 
+            n_pilot_subblocks_probe_range=n_pilot_subblocks_probe_range,
+            gen_avg_nmse=gen_avg_nmse,
+            gen_avg_se=gen_avg_se,
+            gen_avg_se_pos=gen_avg_se_pos
+            )
 
-    np.savez('data/figure7_gen-ris_K' + str(K) + '_N' + str(N) + 'f6.npz',
-             gen_avg_nmse=gen_avg_nmse,
-             gen_avg_se=gen_avg_se,
-             gen_avg_se_pos=gen_avg_se_pos
-             )
+    np.savez('data/figure9_pow-ris_K' + str(K) + '_N' + str(N) + '.npz',
+            n_pilot_subblocks=n_pilot_subblocks, 
+            n_pilot_subblocks_probe_range=n_pilot_subblocks_probe_range,
+            pow_avg_nmse=pow_avg_nmse,
+            pow_avg_se=pow_avg_se,
+            pow_avg_se_pos=pow_avg_se_pos
+            )
 
-    np.savez('data/figure7_pow-ris_K' + str(K) + '_N' + str(N) + 'f6.npz',
-             pow_avg_nmse=pow_avg_nmse,
-             pow_avg_se=pow_avg_se,
-             pow_avg_se_pos=pow_avg_se_pos
-             )
-
-    np.savez('data/figure7_sig-ris_K' + str(K) + '_N' + str(N) + 'f6.npz',
-             sig_avg_nmse=sig_avg_nmse,
-             sig_avg_se=sig_avg_se,
-             sig_avg_se_pos=sig_avg_se_pos
-             )
+    np.savez('data/figure9_sig-ris_K' + str(K) + '_N' + str(N) + '.npz',
+            n_pilot_subblocks=n_pilot_subblocks, 
+            n_pilot_subblocks_probe_range=n_pilot_subblocks_probe_range,
+            sig_avg_nmse=sig_avg_nmse,
+            sig_avg_se=sig_avg_se,
+            sig_avg_se_pos=sig_avg_se_pos
+            )

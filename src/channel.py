@@ -86,13 +86,13 @@ def generate_channel_realizations(wavelength, pos_bs, pos_bs_els, pos_ris, pos_r
     :return:
     """
 
-    # BS-UE channels
+    # BS-UE LoS channels
     bs_ue_steering = array_steering_vector(wavelength, pos_ues, pos_bs, pos_bs_els)
     bs_ue_pathloss = pathloss(3.76, pos_bs, pos_ues)
 
     los_bs_ue_channels = np.sqrt(bs_ue_pathloss)[:, None] * bs_ue_steering
 
-    # RIS-UE channels
+    # RIS-UE LoS channels
     ris_ue_steering = array_steering_vector(wavelength, pos_ues, pos_ris, pos_ris_els)
     ris_ue_pathloss = pathloss(2, pos_ris, pos_ues)
 
@@ -105,12 +105,13 @@ def generate_channel_realizations(wavelength, pos_bs, pos_bs_els, pos_ris, pos_r
     random_ = np.sqrt(sigma2_rr/2) * (np.random.randn(n_channels) + 1j * np.random.randn(n_channels))
     ris_ue_channels = los_ris_ue_channels[:, :, None] + random_[None, None, :]
 
+    # Correct
     bs_ue_channels = bs_ue_channels.transpose((1, 2, 0))
     ris_ue_channels = ris_ue_channels.transpose((1, 2, 0))
 
     return bs_ue_channels, ris_ue_channels
 
-def generate_channel_realizations2(wavelength, pos_bs, pos_bs_els, pos_ris, pos_ris_els, pos_ues, sigma2_dr, sigma2_rr, n_channels):
+def generate_los_channel_realizations(wavelength, pos_bs, pos_bs_els, pos_ris, pos_ris_els, pos_ues):
     """
 
     :param wavelength:
@@ -123,32 +124,23 @@ def generate_channel_realizations2(wavelength, pos_bs, pos_bs_els, pos_ris, pos_
     :return:
     """
 
-    # BS-UE channels
+    # BS-UE LoS channels
     bs_ue_steering = array_steering_vector(wavelength, pos_ues, pos_bs, pos_bs_els)
     bs_ue_pathloss = pathloss(3.76, pos_bs, pos_ues)
 
     los_bs_ue_channels = np.sqrt(bs_ue_pathloss)[:, None] * bs_ue_steering
 
-    # RIS-UE channels
+    # RIS-UE LoS channels
     ris_ue_steering = array_steering_vector(wavelength, pos_ues, pos_ris, pos_ris_els)
     ris_ue_pathloss = pathloss(2, pos_ris, pos_ues)
 
     los_ris_ue_channels = np.sqrt(ris_ue_pathloss)[:, None] * ris_ue_steering
     
-    # Generate realizations
-    random_ = np.sqrt(sigma2_dr/2) *  (np.random.randn(n_channels) + 1j * np.random.randn(n_channels))
-    bs_ue_channels = los_bs_ue_channels[:, :, None] + random_[None, None, :]
-
-    random_ = np.sqrt(sigma2_rr/2) * (np.random.randn(n_channels) + 1j * np.random.randn(n_channels))
-    ris_ue_channels = los_ris_ue_channels[:, :, None] + random_[None, None, :]
-
+    # Correct
     los_bs_ue_channels = los_bs_ue_channels.transpose((1, 0))
     los_ris_ue_channels = los_ris_ue_channels.transpose((1, 0))
 
-    bs_ue_channels = bs_ue_channels.transpose((1, 2, 0))
-    ris_ue_channels = ris_ue_channels.transpose((1, 2, 0))
-
-    return bs_ue_channels, los_bs_ue_channels, ris_ue_channels, los_ris_ue_channels
+    return los_bs_ue_channels, los_ris_ue_channels
 
 def array_steering_vector(wavelength, pos1, pos2, pos_els):
     """

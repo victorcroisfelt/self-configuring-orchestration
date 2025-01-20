@@ -31,14 +31,14 @@ if __name__ == '__main__':
     ##################################################
 
     # Coherence interval length
-    tau_c = 128
+    coherence_interval_length = 128
 
     ##################################################
     # Geometry
     ##################################################
 
     # Physical parameters
-    freq = 6 * 10 ** 9
+    freq = 28 * 10 ** 9
     wavelength = speed_of_light / freq
 
     # NLoS variances
@@ -50,9 +50,6 @@ if __name__ == '__main__':
 
     # Generate scenario
     pos_bs, pos_bs_els, pos_ris, pos_ris_els, bs_ris_channels, ris_bs_steering, guard_distance_ris = scenario(wavelength, M, N=32)
-
-    # Maximum distance
-    #distance_max = 100
 
     ##################################################
     # Simulation Parameters
@@ -70,6 +67,15 @@ if __name__ == '__main__':
     # Define the number of UEs
     K = 4
 
+    # Number of pilots
+    n_pilots = int(K)
+
+    # Number of pilot subblocks
+    n_pilot_subblocks = int(64 // K)
+
+    # Calculate pre-log term
+    pre_log_term = (coherence_interval_length - n_pilot_subblocks * n_pilots) / coherence_interval_length
+
     ##################################################
     # Simulation
     ##################################################
@@ -86,24 +92,12 @@ if __name__ == '__main__':
     # Go through all setups
     for ss in tqdm(range(n_setups)):
 
-        K = int(K)
-
-        # Number of pilots
-        n_pilots = K
-
-        # Number of pilot subblocks
-        n_pilot_subblocks = int(64 // K)
-
-        # Calculate pre-log term
-        pre_log_term = (tau_c - n_pilot_subblocks * n_pilots) / tau_c
-
         # Drop the UEs over the area of interest
         pos_ues = drop_ues(K, pos_ris, dmax=1000, guard_distance_ris=900)
 
         # Generate UE channels
-        bs_ue_channels, _ = generate_channel_realizations(wavelength, pos_bs, pos_bs_els, pos_ris,
-                                                                        pos_ris_els, pos_ues, sigma2_dr, sigma2_rr,
-                                                                        n_channels)
+        bs_ue_channels, _ = generate_channel_realizations(wavelength, pos_bs, pos_bs_els, pos_ris, pos_ris_els, pos_ues, sigma2_dr, sigma2_rr, n_channels)
+
         # Go through noise realizations
         for nn in range(n_noise):
 
@@ -132,7 +126,7 @@ if __name__ == '__main__':
             avg_se[1, ss, :, nn] = se
             avg_se_pos[1, ss, :, nn] = pre_log_term * se
 
-    np.savez('data/figure7_mmimo_K' + str(K) + 'f6.npz',
+    np.savez('data/figure9_mmimo_K' + str(K) + '.npz',
              avg_nmse=avg_nmse,
              avg_se=avg_se,
              avg_se_pos=avg_se_pos
