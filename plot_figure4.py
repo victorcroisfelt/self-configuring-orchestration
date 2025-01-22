@@ -27,7 +27,7 @@ if __name__ == '__main__':
     N = 32
 
     # HRIS reflection parameter
-    eta = 0.9999
+    eta = 0.999
 
     ##################################################
     # UE Parameters

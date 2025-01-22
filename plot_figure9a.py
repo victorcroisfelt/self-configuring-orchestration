@@ -14,11 +14,11 @@ plt.rcParams['text.usetex'] = True
 plt.rcParams['font.size'] = 10
 
 # Load data
-data = np.load('data/figure7_mmimo_K4.npz')
+data = np.load('data/figure9_mmimo_K4.npz')
 
-gen_data = np.load('data/figure7_gen-ris_K4_N32.npz')
-pow_data = np.load('data/figure7_pow-ris_K4_N32.npz')
-sig_data = np.load('data/figure7_sig-ris_K4_N32.npz')
+gen_data = np.load('data/figure9_gen-ris_K4_N32.npz')
+pow_data = np.load('data/figure9_pow-ris_K4_N32.npz')
+sig_data = np.load('data/figure9_sig-ris_K4_N32.npz')
 
 # Extract relevant information
 nmse = data['avg_nmse']
@@ -40,19 +40,6 @@ avg_sig_nmse = np.nanmean(sig_nmse, axis=(1, 2, 3, 4))
 
 # Number of pilot subbblocks for probe
 X_ = np.arange(1,  16 + 1) / 16
-
-#breakpoint()
-# # Smoothness
-# st_relative_probe_time = np.linspace(relative_probe_time.min(), relative_probe_time.max(), 1001)
-#
-# cs = CubicSpline(relative_probe_time[:-1], avg_gen_nmse[:-1])
-# st_avg_gen_nmse = cs(st_relative_probe_time)
-#
-# cs = CubicSpline(relative_probe_time, avg_pow_nmse)
-# st_avg_pow_nmse = cs(st_relative_probe_time)
-#
-# cs = CubicSpline(relative_probe_time, avg_sig_nmse)
-# st_avg_sig_nmse = cs(st_relative_probe_time)
 
 #linestyles = ['-', '--', '-.']
 colors = ['tab:blue', 'tab:orange', 'tab:green']
@@ -91,6 +78,6 @@ legend.get_frame().set_linewidth(0.5)
 plt.tight_layout()
 
 #tikzplotlib.save("tikz/figure7a.tex")
-plt.savefig('figs/figure9a.pdf', bbox_inches='tight')
+#plt.savefig('figs/figure9a.pdf', bbox_inches='tight')
 
 plt.show()

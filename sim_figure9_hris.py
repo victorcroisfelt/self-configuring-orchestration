@@ -53,8 +53,8 @@ if __name__ == '__main__':
     wavelength = speed_of_light / freq
 
     # NLoS variances
-    sigma2_dr = 0.1 * 9.07 * 1e-9
-    sigma2_rr = 0.1 * 1.12 * 1e-6
+    sigma2_dr = 0.1 * 9.08 * 1e-7
+    sigma2_rr = 0.1 * 1.11 * 1e-6
 
     # Noise power
     sigma2_n_bs = 10 ** ((-94 - 30) / 10)
@@ -80,7 +80,7 @@ if __name__ == '__main__':
     proba_false_alarm = 0.01
 
     # HRIS reflection parameter
-    eta = 0.9999
+    eta = 0.999
 
     # Number of pilots
     n_pilots = K
@@ -89,7 +89,7 @@ if __name__ == '__main__':
     n_pilot_subblocks = int(64 // K)
 
     # Number of probe pilot subbblocks
-    n_pilot_subblocks_probe_range = np.arange(1, n_pilot_subblocks + 1)
+    n_probe_pilot_subblocks_range = np.arange(1, n_pilot_subblocks + 1)
 
     # Calculate pre-log term
     pre_log_term = (coherence_interval_length - n_pilot_subblocks * n_pilots) / coherence_interval_length
@@ -137,24 +137,24 @@ if __name__ == '__main__':
         gen_reflection_configs, gen_weights = gen_ris_probe(ris_ue_channels)
 
         # Go through all points in the x-dimension
-        for cc, n_pilot_subblocks_probe in enumerate(n_pilot_subblocks_probe_range):
+        for cc, n_probe_pilot_subblocks in enumerate(n_probe_pilot_subblocks_range):
             
-            if n_pilot_subblocks_probe == n_pilot_subblocks:
+            if n_probe_pilot_subblocks == n_pilot_subblocks:
                 break
 
             # Generate power-RIS configuration codebook
-            pow_probe_configs = pow_ris_config_codebook(wavelength, n_pilot_subblocks_probe, pos_ris, pos_ris_els)
+            pow_probe_configs = pow_ris_config_codebook(wavelength, n_probe_pilot_subblocks, pos_ris, pos_ris_els)
 
             # Go through noise realizations
             for nn in range(n_noise):
 
                 # Compute received pilot signals
-                pow_ris_rx_chest = ris_rx_chest(eta, P_ue, n_pilots, sigma2_n_ris, n_pilot_subblocks_probe, ris_ue_channels, pow_probe_configs)
-                sig_ris_rx_chest = ris_rx_chest(eta, P_ue, n_pilots, sigma2_n_ris, n_pilot_subblocks_probe, ris_ue_channels)
+                pow_ris_rx_chest = ris_rx_chest(eta, P_ue, n_pilots, sigma2_n_ris, n_probe_pilot_subblocks, ris_ue_channels, pow_probe_configs)
+                sig_ris_rx_chest = ris_rx_chest(eta, P_ue, n_pilots, sigma2_n_ris, n_probe_pilot_subblocks, ris_ue_channels)
 
                 # HRIS probe
                 pow_reflection_configs, pow_weights, pow_hat_aoa = pow_ris_probe(N, sigma2_n_ris, proba_false_alarm, pow_ris_rx_chest, pow_probe_configs)
-                sig_reflection_configs, sig_weights, sig_hat_aoa = sig_ris_probe(n_pilots, sigma2_n_ris, proba_false_alarm, sig_ris_rx_chest)
+                sig_reflection_configs, sig_weights, sig_hat_aoa = sig_ris_probe(n_probe_pilot_subblocks, n_pilots, sigma2_n_ris, proba_false_alarm, sig_ris_rx_chest)
 
                 # Complete reflection configurations by inserting BS-RIS knowledge
                 gen_reflection_configs *= ris_bs_steering[:, None]
@@ -197,13 +197,13 @@ if __name__ == '__main__':
 
                 # Get channel estimates
                 gen_hat_eq_channels = bs_rx_chest_no_probe(P_ue, n_pilots, sigma2_n_bs, n_pilot_subblocks,
-                                                  n_pilot_subblocks_probe, gen_eq_channels)
+                                                  n_probe_pilot_subblocks, gen_eq_channels)
 
                 pow_hat_eq_channels = bs_rx_chest(P_ue, n_pilots, sigma2_n_bs, n_pilot_subblocks,
-                                                  n_pilot_subblocks_probe, pow_eq_channels_probe, pow_eq_channels)
+                                                  n_probe_pilot_subblocks, pow_eq_channels_probe, pow_eq_channels)
 
                 sig_hat_eq_channels = bs_rx_chest(P_ue, n_pilots, sigma2_n_bs, n_pilot_subblocks,
-                                                  n_pilot_subblocks_probe, sig_eq_channels_probe, sig_eq_channels)
+                                                  n_probe_pilot_subblocks, sig_eq_channels_probe, sig_eq_channels)
 
                 # Compute normalized mean squared error
                 diff = gen_hat_eq_channels - gen_eq_channels
@@ -249,7 +249,7 @@ if __name__ == '__main__':
 
     np.savez('data/figure9_gen-ris_K' + str(K) + '_N' + str(N) + '.npz',
             n_pilot_subblocks=n_pilot_subblocks, 
-            n_pilot_subblocks_probe_range=n_pilot_subblocks_probe_range,
+            n_probe_pilot_subblocks_range=n_probe_pilot_subblocks_range,
             gen_avg_nmse=gen_avg_nmse,
             gen_avg_se=gen_avg_se,
             gen_avg_se_pos=gen_avg_se_pos
@@ -257,7 +257,7 @@ if __name__ == '__main__':
 
     np.savez('data/figure9_pow-ris_K' + str(K) + '_N' + str(N) + '.npz',
             n_pilot_subblocks=n_pilot_subblocks, 
-            n_pilot_subblocks_probe_range=n_pilot_subblocks_probe_range,
+            n_probe_pilot_subblocks_range=n_probe_pilot_subblocks_range,
             pow_avg_nmse=pow_avg_nmse,
             pow_avg_se=pow_avg_se,
             pow_avg_se_pos=pow_avg_se_pos
@@ -265,7 +265,7 @@ if __name__ == '__main__':
 
     np.savez('data/figure9_sig-ris_K' + str(K) + '_N' + str(N) + '.npz',
             n_pilot_subblocks=n_pilot_subblocks, 
-            n_pilot_subblocks_probe_range=n_pilot_subblocks_probe_range,
+            n_probe_pilot_subblocks_range=n_probe_pilot_subblocks_range,
             sig_avg_nmse=sig_avg_nmse,
             sig_avg_se=sig_avg_se,
             sig_avg_se_pos=sig_avg_se_pos

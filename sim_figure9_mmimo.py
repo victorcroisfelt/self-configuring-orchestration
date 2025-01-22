@@ -42,8 +42,8 @@ if __name__ == '__main__':
     wavelength = speed_of_light / freq
 
     # NLoS variances
-    sigma2_dr = 0.1 * 9.07 * 1e-9
-    sigma2_rr = 0.1 * 1.12 * 1e-6
+    sigma2_dr = 0.1 * 9.08 * 1e-7
+    sigma2_rr = 0.1 * 1.11 * 1e-6
 
     # Noise power
     sigma2_n = 10 ** ((-94 - 30) / 10)

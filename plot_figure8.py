@@ -31,7 +31,7 @@ if __name__ == '__main__':
     N = 32
 
     # HRIS reflection parameter
-    eta = 0.9999
+    eta = 0.999
 
     ##################################################
     # UE Parameters
@@ -83,7 +83,7 @@ if __name__ == '__main__':
     ##################################################
 
     # Drop the UEs over the area of interest
-    angles_ues_deg = np.array([30, 80])
+    angles_ues_deg = np.array([30, 75])
     angles_ues = np.deg2rad(angles_ues_deg)
     distance_ues = np.array([10, 20])
 
@@ -107,7 +107,7 @@ if __name__ == '__main__':
     # HRIS probe mode
     gen_reflection_configs, gen_weights = gen_ris_probe(los_ris_ue_channels[:, None, :])
     pow_reflection_configs, pow_weights, pow_hat_aoa = pow_ris_probe(N, sigma2_n_ris, proba_false_alarm, pow_ris_rx_chest, pow_probe_configs)
-    sig_reflection_configs, sig_weights, sig_hat_aoa = sig_ris_probe(n_pilots, sigma2_n_ris, proba_false_alarm, sig_ris_rx_chest)
+    sig_reflection_configs, sig_weights, sig_hat_aoa = sig_ris_probe(n_probe_pilot_subblocks, n_pilots, sigma2_n_ris, proba_false_alarm, sig_ris_rx_chest)
 
     # Average configurations
     gen_reflection_configs = np.squeeze(gen_reflection_configs)

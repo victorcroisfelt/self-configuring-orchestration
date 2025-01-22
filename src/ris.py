@@ -61,12 +61,12 @@ def ris_rx_chest(eta, P_ue, n_pilots, sigma2_n, n_probe_pilot_subblocks, ris_ue_
     else:
 
         # Generate noise
-        noise = (np.random.randn(n_probe_pilot_subblocks, N, n_channels, K) + 1j * np.random.randn(n_probe_pilot_subblocks, N, n_channels, K))
-        noise *= np.sqrt(n_pilots * sigma2_n / 2)
+        noise = (np.random.randn(N, n_channels, K) + 1j * np.random.randn(N, n_channels, K))
+        noise *= np.sqrt(n_pilots * sigma2_n / n_probe_pilot_subblocks / 2)
 
         # Compute received signal
-        ris_rx_chest = noise
-        ris_rx_chest[:, :, :, :] += np.sqrt((1 - eta)) * np.sqrt(P_ue) * n_pilots * ris_ue_channels[None, :, :, :]
+        ris_rx_chest = noise.copy()
+        ris_rx_chest[:, :, :] += np.sqrt((1 - eta)) * np.sqrt(P_ue) * n_pilots * ris_ue_channels[:, :, :]
 
     return ris_rx_chest
 
@@ -103,12 +103,12 @@ def ris_rx_chest_with_choice(eta, P_ue, n_pilots, sigma2_n, n_probe_pilot_subblo
     else:
 
         # Generate noise
-        noise = (np.random.randn(n_probe_pilot_subblocks, N, n_channels, K) + 1j * np.random.randn(n_probe_pilot_subblocks, N, n_channels, K))
-        noise *= np.sqrt(n_pilots * sigma2_n / 2)
+        noise = (np.random.randn(N, n_channels, K) + 1j * np.random.randn(N, n_channels, K))
+        noise *= np.sqrt(n_pilots * sigma2_n / n_probe_pilot_subblocks / 2)
 
         # Compute received signal
-        ris_rx_chest = noise
-        ris_rx_chest[:, :, :, mask] += np.sqrt((1 - eta)) * np.sqrt(P_ue) * n_pilots * ris_ue_channels[None, :, :, mask]
+        ris_rx_chest = noise.copy()
+        ris_rx_chest[:, :, mask] += np.sqrt((1 - eta)) * np.sqrt(P_ue) * n_pilots * ris_ue_channels[:, :, mask]
 
     return ris_rx_chest
 
@@ -184,7 +184,7 @@ def pow_ris_probe(N, sigma2_n, proba_false_alarm, pd_ris_rx_chest, pd_probe_conf
     return reflection_configs, weights, hat_aoa
 
 
-def sig_ris_probe(n_pilots, sigma2_n, proba_false_alarm, dsp_ris_rx_chest):
+def sig_ris_probe(n_probe_pilot_subblocks, n_pilots, sigma2_n, proba_false_alarm, dsp_ris_rx_chest):
     """
 
     :param sigma2_n:
@@ -194,23 +194,21 @@ def sig_ris_probe(n_pilots, sigma2_n, proba_false_alarm, dsp_ris_rx_chest):
     """
 
     # Extract useful constants
-    n_probe_pilot_subblocks, N, n_channels, K = dsp_ris_rx_chest.shape
-
-    # Average signal over probe subblocks
-    avg_subblocks = np.mean(dsp_ris_rx_chest, axis=0)
+    N, n_channels, K = dsp_ris_rx_chest.shape
 
     # Compute test 
-    ynorms = np.linalg.norm(avg_subblocks, axis=0)
-    test = 2 * N * n_probe_pilot_subblocks / n_pilots / sigma2_n * ynorms**2
+    ynorms = np.linalg.norm(dsp_ris_rx_chest, axis=0)
+    dsp_test = ynorms.copy()**2
+    dsp_test *= 2 * n_probe_pilot_subblocks / n_pilots / sigma2_n
 
     # Get threshold value
-    threshold = chi2.ppf(1 - proba_false_alarm, df=2*N)
+    threshold = chi2.ppf((1 - proba_false_alarm), df=2*N)
 
     # Perform test
-    detected_ues = test > threshold
-
+    detected_ues = (dsp_test > threshold)
+    
     # Update avg antennas
-    avg_subblocks[:, ~detected_ues] = 0.0
+    dsp_test[~detected_ues] = 0.0
 
     # Compute weights
     weights = ynorms
@@ -232,7 +230,7 @@ def sig_ris_probe(n_pilots, sigma2_n, proba_false_alarm, dsp_ris_rx_chest):
             if detected_ues[rr, dd]:
 
                 # Find the best configuration
-                hat_aoa[:, rr, dd] = np.exp(1j * np.angle(avg_subblocks[:, rr, dd]))
+                hat_aoa[:, rr, dd] = np.exp(1j * np.angle(dsp_ris_rx_chest[:, rr, dd]))
 
                 # Compute reflection configuration
                 reflection_configs[:, rr] += weights[rr, dd] * hat_aoa[:, rr, dd].conj()
